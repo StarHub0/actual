@@ -74,7 +74,8 @@ export type SyncedPrefs = Partial<
     | 'dashboard-btc-amount'
     | 'dashboard-btc-cost'
     | 'dashboard-cdb-account'
-    | 'dashboard-cdb-rate'
+    | 'dashboard-cdb-cdi'
+    | 'dashboard-btc-account'
     | `savings-goal-image-${string}`
     | `show-hidden-tags`,
     string

@@ -1,16 +1,18 @@
 import React from 'react';
-import { Trans } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
+import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
 import { View } from '@actual-app/components/view';
 
 import { useFormat } from '#hooks/useFormat';
 
-import { Card, colors, Label, numeric } from './ui';
+import { colors, numeric, WidgetCard } from './ui';
 import type { Portfolio } from './usePortfolio';
 
 export function SummaryCard({ portfolio }: { portfolio: Portfolio }) {
+  const { t } = useTranslation();
   const format = useFormat();
   const slices = [
     { name: 'Bitcoin', value: portfolio.btcCents, color: colors.btc },
@@ -19,49 +21,36 @@ export function SummaryCard({ portfolio }: { portfolio: Portfolio }) {
       value: Math.max(portfolio.cdbBalance, 0),
       color: colors.cdb,
     },
-    { name: 'Cash', value: Math.max(portfolio.cash, 0), color: colors.cash },
+    {
+      name: t('Cash'),
+      value: Math.max(portfolio.cash, 0),
+      color: colors.cash,
+    },
   ];
   const total = slices.reduce((sum, slice) => sum + slice.value, 0);
 
   return (
-    <Card style={{ gap: 16 }}>
-      <View
+    <WidgetCard
+      title={<Trans>Investments</Trans>}
+      subtitle={t('Net worth {{amount}}', {
+        amount: format(portfolio.netWorth, 'financial'),
+      })}
+    >
+      <Text
         style={{
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          gap: 32,
-          alignItems: 'flex-end',
+          ...numeric,
+          fontSize: 32,
+          fontWeight: 500,
+          color: theme.pageText,
         }}
       >
-        <View style={{ gap: 4 }}>
-          <Label>
-            <Trans>Invested</Trans>
-          </Label>
-          <Text
-            style={{
-              ...numeric,
-              fontSize: 32,
-              fontWeight: 700,
-              letterSpacing: -0.8,
-            }}
-          >
-            {format(portfolio.invested, 'financial')}
-          </Text>
-        </View>
-        <View style={{ gap: 4 }}>
-          <Label>
-            <Trans>Net worth</Trans>
-          </Label>
-          <Text style={{ ...numeric, fontSize: 20, fontWeight: 600 }}>
-            {format(portfolio.netWorth, 'financial')}
-          </Text>
-        </View>
-      </View>
+        {format(portfolio.invested, 'financial')}
+      </Text>
       <View
         style={{
           flexDirection: 'row',
-          height: 8,
-          borderRadius: 8,
+          height: 6,
+          borderRadius: 3,
           overflow: 'hidden',
           backgroundColor: theme.tableBorder,
           gap: 2,
@@ -78,29 +67,29 @@ export function SummaryCard({ portfolio }: { portfolio: Portfolio }) {
             />
           ))}
       </View>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 20 }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 16 }}>
         {slices.map(slice => (
           <View
             key={slice.name}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
           >
             <View
               style={{
                 width: 8,
                 height: 8,
-                borderRadius: 8,
+                borderRadius: 4,
                 backgroundColor: slice.color,
               }}
             />
-            <Text style={{ fontSize: 13, color: theme.pageTextLight }}>
+            <Text style={{ ...styles.smallText, color: theme.pageTextSubdued }}>
               {slice.name}
             </Text>
-            <Text style={{ ...numeric, fontSize: 13, fontWeight: 600 }}>
+            <Text style={{ ...numeric, ...styles.smallText, fontWeight: 500 }}>
               {total > 0 ? Math.round((slice.value / total) * 100) : 0}%
             </Text>
           </View>
         ))}
       </View>
-    </Card>
+    </WidgetCard>
   );
 }

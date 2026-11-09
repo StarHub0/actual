@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Trans } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
+import { Button } from '@actual-app/components/button';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
 import { View } from '@actual-app/components/view';
@@ -9,50 +10,39 @@ import { Area, AreaChart, Tooltip as ChartTooltip, YAxis } from 'recharts';
 import { useFormat } from '#hooks/useFormat';
 
 import { brl, historyRanges, useBitcoinHistory } from './bitcoinMarket';
-import { PrefInput } from './PrefInput';
-import { AssetBadge, Card, Chip, colors, numeric, Stat } from './ui';
+import { AccountSelect, PrefInput, SettingsRow } from './PrefInput';
+import { ScheduleLine } from './ScheduleLine';
+import { Chip, colors, numeric, Stat, WidgetCard } from './ui';
 import type { Portfolio } from './usePortfolio';
 
 export function BitcoinCard({ portfolio }: { portfolio: Portfolio }) {
+  const { t } = useTranslation();
   const format = useFormat();
   const [days, setDays] = useState(30);
+  const [editing, setEditing] = useState(false);
   const history = useBitcoinHistory(days);
   const points = history.data ?? [];
-  const first = points[0]?.price ?? 0;
-  const last = points[points.length - 1]?.price ?? 0;
-  const lineColor = last >= first ? colors.up : colors.down;
-  const profit = portfolio.btcProfit;
+  const rising =
+    (points[points.length - 1]?.price ?? 0) >= (points[0]?.price ?? 0);
+  const lineColor = rising
+    ? theme.reportsNumberPositive
+    : theme.reportsNumberNegative;
+  const { btcProfit, btcInvested } = portfolio;
 
   return (
-    <Card style={{ gap: 14 }}>
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 12,
-        }}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <AssetBadge color={colors.btc}>₿</AssetBadge>
-          <View>
-            <Text style={{ fontSize: 15, fontWeight: 600 }}>
-              <Trans>Bitcoin</Trans>
-            </Text>
-            <Text style={{ fontSize: 12, color: theme.pageTextSubdued }}>
-              BTC / BRL
-            </Text>
-          </View>
-        </View>
-        <View style={{ alignItems: 'flex-end', gap: 4 }}>
-          <Text style={{ ...numeric, fontSize: 22, fontWeight: 700 }}>
+    <WidgetCard
+      title={t('Bitcoin')}
+      subtitle="BTC / BRL"
+      right={
+        <View style={{ alignItems: 'flex-end' }}>
+          <Text style={{ ...numeric, fontSize: 20, fontWeight: 500 }}>
             {portfolio.btcPrice > 0 ? brl.format(portfolio.btcPrice) : '—'}
           </Text>
           <Chip value={portfolio.quote?.change24h ?? null} />
         </View>
-      </View>
-
-      <View style={{ height: 130 }}>
+      }
+    >
+      <View style={{ height: 110 }}>
         {history.isError ? (
           <Text style={{ color: theme.pageTextSubdued }}>
             <Trans>Price history unavailable</Trans>
@@ -66,7 +56,7 @@ export function BitcoinCard({ portfolio }: { portfolio: Portfolio }) {
           >
             <defs>
               <linearGradient id="btcFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={lineColor} stopOpacity={0.3} />
+                <stop offset="0%" stopColor={lineColor} stopOpacity={0.25} />
                 <stop offset="100%" stopColor={lineColor} stopOpacity={0} />
               </linearGradient>
             </defs>
@@ -75,7 +65,7 @@ export function BitcoinCard({ portfolio }: { portfolio: Portfolio }) {
               contentStyle={{
                 backgroundColor: theme.menuBackground,
                 border: `1px solid ${theme.tableBorder}`,
-                borderRadius: 10,
+                borderRadius: 4,
                 color: theme.menuItemText,
               }}
               formatter={value => [brl.format(Number(value)), 'BTC']}
@@ -99,49 +89,38 @@ export function BitcoinCard({ portfolio }: { portfolio: Portfolio }) {
         )}
       </View>
 
-      <View style={{ flexDirection: 'row', gap: 4 }}>
-        {historyRanges.map(range => (
-          <button
-            key={range.days}
-            onClick={() => setDays(range.days)}
-            style={{
-              border: 'none',
-              cursor: 'pointer',
-              padding: '3px 10px',
-              borderRadius: 8,
-              fontSize: 12,
-              fontWeight: 600,
-              color: days === range.days ? '#fff' : theme.pageTextSubdued,
-              backgroundColor: days === range.days ? colors.btc : 'transparent',
-            }}
-          >
-            {range.label}
-          </button>
-        ))}
-      </View>
-
       <View
         style={{
           flexDirection: 'row',
-          gap: 12,
-          paddingTop: 14,
-          borderTop: `1px solid ${theme.tableBorder}`,
+          justifyContent: 'space-between',
+          alignItems: 'center',
         }}
       >
-        <PrefInput
-          prefKey="dashboard-btc-amount"
-          label="BTC"
-          placeholder="0,00000000"
-          suffix=""
-        />
-        <PrefInput
-          prefKey="dashboard-btc-cost"
-          label="BRL"
-          placeholder="0,00"
-          suffix=""
-        />
+        <View style={{ flexDirection: 'row', gap: 2 }}>
+          {historyRanges.map(range => (
+            <Button
+              key={range.days}
+              variant="bare"
+              onPress={() => setDays(range.days)}
+              style={{
+                color: days === range.days ? colors.btc : theme.pageTextSubdued,
+                fontWeight: days === range.days ? 600 : 400,
+              }}
+            >
+              {range.label}
+            </Button>
+          ))}
+        </View>
+        <Button variant="bare" onPress={() => setEditing(!editing)}>
+          {editing ? t('Done') : t('Edit')}
+        </Button>
       </View>
-      <View style={{ flexDirection: 'row', gap: 24 }}>
+
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 24 }}>
+        <Stat
+          label={<Trans>Invested</Trans>}
+          value={btcInvested == null ? '—' : format(btcInvested, 'financial')}
+        />
         <Stat
           label={<Trans>Position</Trans>}
           value={
@@ -153,13 +132,39 @@ export function BitcoinCard({ portfolio }: { portfolio: Portfolio }) {
         <Stat
           label={<Trans>Profit</Trans>}
           value={
-            profit == null
+            btcProfit == null
               ? '—'
-              : `${profit >= 0 ? '+' : ''}${format(profit, 'financial')}`
+              : `${btcProfit >= 0 ? '+' : ''}${format(btcProfit, 'financial')}`
           }
-          tone={profit == null ? undefined : profit >= 0 ? 'good' : 'bad'}
+          tone={btcProfit == null ? undefined : btcProfit >= 0 ? 'good' : 'bad'}
         />
       </View>
-    </Card>
+
+      <ScheduleLine next={portfolio.btcNext} />
+
+      {editing && (
+        <SettingsRow>
+          <PrefInput
+            prefKey="dashboard-btc-amount"
+            label={t('Bitcoin held (BTC)')}
+            placeholder="0,00000000"
+          />
+          <AccountSelect
+            prefKey="dashboard-btc-account"
+            label={t('Bitcoin account')}
+            accounts={portfolio.accounts}
+            value={portfolio.btcAccountId}
+            emptyLabel={t('None')}
+          />
+          {portfolio.btcAccountId === '' && (
+            <PrefInput
+              prefKey="dashboard-btc-cost"
+              label={t('Total paid (BRL)')}
+              placeholder="0,00"
+            />
+          )}
+        </SettingsRow>
+      )}
+    </WidgetCard>
   );
 }

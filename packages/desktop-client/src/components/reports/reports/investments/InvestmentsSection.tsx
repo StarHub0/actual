@@ -15,17 +15,19 @@ export function InvestmentsSection() {
       style={{
         flexDirection: 'row',
         flexWrap: 'wrap',
-        alignItems: 'flex-start',
+        alignItems: 'stretch',
         gap: 10,
         margin: '10px 10px 0',
       }}
     >
-      <View style={{ flex: '1 1 360px', gap: 10, minWidth: 0 }}>
+      <View style={{ flex: '1 1 300px', minWidth: 0 }}>
         <SummaryCard portfolio={portfolio} />
-        <CdbCard portfolio={portfolio} />
       </View>
-      <View style={{ flex: '1 1 360px', minWidth: 0 }}>
+      <View style={{ flex: '1 1 300px', minWidth: 0 }}>
         <BitcoinCard portfolio={portfolio} />
+      </View>
+      <View style={{ flex: '1 1 300px', minWidth: 0 }}>
+        <CdbCard portfolio={portfolio} />
       </View>
     </View>
   );

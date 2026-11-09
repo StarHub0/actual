@@ -86,3 +86,20 @@ export function parseDecimal(text: string): number | null {
 export function toCents(value: number) {
   return Math.round(value * 100);
 }
+
+async function fetchCdi(): Promise<number> {
+  const response = await fetch(
+    'https://api.bcb.gov.br/dados/serie/bcdata.sgs.4389/dados/ultimos/1?formato=json',
+  );
+  const body = await response.json();
+  return Number(body[0].valor);
+}
+
+export function useCdiRate() {
+  return useQuery({
+    queryKey: ['dashboard', 'cdi'],
+    queryFn: fetchCdi,
+    staleTime: 60 * 60_000,
+    retry: 2,
+  });
+}
