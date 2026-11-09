@@ -1,0 +1,58 @@
+name: Custom image
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - 'packages/**'
+      - 'yarn.lock'
+      - '.github/workflows/custom-image.yml'
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: custom-image
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set up environment
+        uses: ./.github/actions/setup
+
+      - name: Build web
+        run: yarn build:server
+        env:
+          NODE_OPTIONS: --max_old_space_size=6144
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          context: .
+          push: true
+          file: packages/sync-server/docker/ubuntu.Dockerfile
+          platforms: linux/amd64
+          tags: |
+            ghcr.io/starhub0/actual-custom:latest
+            ghcr.io/starhub0/actual-custom:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
