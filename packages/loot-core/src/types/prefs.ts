@@ -70,6 +70,8 @@ export type SyncedPrefs = Partial<
     | `flip-amount-${string}-${'csv' | 'qif'}`
     | `flags.${FeatureFlag}`
     | `learn-categories`
+    | 'savings-goals'
+    | `savings-goal-image-${string}`
     | `show-hidden-tags`,
     string
   >

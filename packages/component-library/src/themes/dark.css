@@ -1,4 +1,32 @@
 :root {
+  --palette-gray700: #161923;
+  --palette-gray800: #0d0f16;
+  --palette-gray900: #07080c;
+
+  --palette-navy50: #f4f5f8;
+  --palette-navy100: #e6e8ee;
+  --palette-navy150: #d4d8e2;
+  --palette-navy200: #b4bacb;
+  --palette-navy300: #8f96aa;
+  --palette-navy400: #6b7288;
+  --palette-navy500: #4f566b;
+  --palette-navy600: #353b4e;
+  --palette-navy700: #242938;
+  --palette-navy800: #181b27;
+  --palette-navy900: #0f1119;
+
+  --palette-purple100: #ebe9ff;
+  --palette-purple125: #dcd9ff;
+  --palette-purple150: #cdc9ff;
+  --palette-purple200: #b9b4ff;
+  --palette-purple300: #9a93ff;
+  --palette-purple400: #7d75f5;
+  --palette-purple500: #6a60e8;
+  --palette-purple600: #574ccf;
+  --palette-purple700: #4339a8;
+  --palette-purple800: #302a78;
+  --palette-purple900: #1f1b52;
+
   --color-pageBackground: var(--palette-gray900);
   --color-pageBackgroundModalActive: var(--palette-gray800);
   --color-pageBackgroundTopLeft: var(--palette-navy800);

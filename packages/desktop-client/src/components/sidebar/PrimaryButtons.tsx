@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { SvgCog } from '@actual-app/components/icons/v1';
+import { SvgCog, SvgTarget } from '@actual-app/components/icons/v1';
 import { View } from '@actual-app/components/view';
 
 import { useSidebarMenu } from '#hooks/useSidebarMenu';
@@ -25,6 +25,7 @@ export function PrimaryButtons() {
           to={getSidebarMenuItemPath(item.id, true)}
         />
       ))}
+      <Item title={t('Goals')} Icon={SvgTarget} to="/goals" />
       <Item title={t('Settings')} Icon={SvgCog} to="/settings" />
     </View>
   );

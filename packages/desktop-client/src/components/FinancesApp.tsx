@@ -47,6 +47,7 @@ import {
   SettingsIndex,
 } from './settings';
 import { FloatableSidebar } from './sidebar';
+import { GoalsPage } from './goals/GoalsPage';
 import { SidebarMenuRoute } from './sidebar/SidebarMenuRoute';
 import { StartPageRedirect } from './StartPageRedirect';
 import { ManageTagsPage } from './tags/ManageTagsPage';
@@ -265,6 +266,8 @@ export function FinancesApp() {
                     <Route path="/" element={<StartPageRedirect />} />
 
                     <Route path="/reports/*" element={<Reports />} />
+
+                    <Route path="/goals" element={<GoalsPage />} />
 
                     <Route
                       path="/budget"

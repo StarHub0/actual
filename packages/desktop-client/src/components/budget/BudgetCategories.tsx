@@ -241,7 +241,7 @@ export const BudgetCategories = memo<BudgetCategoriesProps>(
           backgroundColor: theme.budgetCurrentMonth, // match budget colors, not generic table colors.
           overflow: 'hidden',
           boxShadow: styles.cardShadow,
-          borderRadius: '0 0 4px 4px',
+          borderRadius: '0 0 12px 12px',
           flex: 1,
         }}
       >
