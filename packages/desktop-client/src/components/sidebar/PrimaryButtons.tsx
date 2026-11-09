@@ -1,7 +1,11 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { SvgCog, SvgTarget } from '@actual-app/components/icons/v1';
+import {
+  SvgCog,
+  SvgDashboard,
+  SvgTarget,
+} from '@actual-app/components/icons/v1';
 import { View } from '@actual-app/components/view';
 
 import { useSidebarMenu } from '#hooks/useSidebarMenu';
@@ -17,6 +21,7 @@ export function PrimaryButtons() {
 
   return (
     <View data-testid="sidebar-primary-buttons" style={{ flexShrink: 0 }}>
+      <Item title={t('Dashboard')} Icon={SvgDashboard} to="/dashboard" />
       {sidebarItems.map(item => (
         <Item
           key={item.id}

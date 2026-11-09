@@ -71,6 +71,10 @@ export type SyncedPrefs = Partial<
     | `flags.${FeatureFlag}`
     | `learn-categories`
     | 'savings-goals'
+    | 'dashboard-btc-amount'
+    | 'dashboard-btc-cost'
+    | 'dashboard-cdb-account'
+    | 'dashboard-cdb-rate'
     | `savings-goal-image-${string}`
     | `show-hidden-tags`,
     string

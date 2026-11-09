@@ -27,9 +27,11 @@ import { UserDirectoryPage } from './admin/UserDirectory/UserDirectoryPage';
 import { BankSyncStatus } from './BankSyncStatus';
 import { CommandBar } from './CommandBar';
 import { ContextMenu } from './ContextMenu';
+import { DashboardPage } from './dashboard/DashboardPage';
 import { EnableBankingCallback } from './EnableBankingCallback';
 import { FeatureErrorFallback } from './FeatureErrorFallback';
 import { GlobalKeys } from './GlobalKeys';
+import { GoalsPage } from './goals/GoalsPage';
 import { MobileBankSyncAccountEditPage } from './mobile/banksync/MobileBankSyncAccountEditPage';
 import { MobileNavTabs } from './mobile/MobileNavTabs';
 import { TransactionEdit } from './mobile/transactions/TransactionEdit';
@@ -47,7 +49,6 @@ import {
   SettingsIndex,
 } from './settings';
 import { FloatableSidebar } from './sidebar';
-import { GoalsPage } from './goals/GoalsPage';
 import { SidebarMenuRoute } from './sidebar/SidebarMenuRoute';
 import { StartPageRedirect } from './StartPageRedirect';
 import { ManageTagsPage } from './tags/ManageTagsPage';
@@ -267,6 +268,7 @@ export function FinancesApp() {
 
                     <Route path="/reports/*" element={<Reports />} />
 
+                    <Route path="/dashboard" element={<DashboardPage />} />
                     <Route path="/goals" element={<GoalsPage />} />
 
                     <Route
