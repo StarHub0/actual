@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 
+import { useResponsive } from '@actual-app/components/hooks/useResponsive';
 import { Input } from '@actual-app/components/input';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
@@ -18,10 +19,10 @@ import {
   YAxis,
 } from 'recharts';
 
-import { Page } from '#components/Page';
-import { useAccountBalances } from '#hooks/useAccountBalances';
-import { useAccounts } from '#hooks/useAccounts';
+import { MobileBackButton } from '#components/mobile/MobileBackButton';
+import { MobilePageHeader, Page, PageHeader } from '#components/Page';
 import { useFormat } from '#hooks/useFormat';
+import { useNavigate } from '#hooks/useNavigate';
 import { useSyncedPref } from '#hooks/useSyncedPref';
 
 import {
@@ -33,6 +34,7 @@ import {
   useBitcoinHistory,
   useBitcoinQuote,
 } from './bitcoinMarket';
+import { useInvestmentAccounts } from './useInvestmentAccounts';
 
 const btcColor = '#f7931a';
 const cdbColor = '#7d75f5';
@@ -630,26 +632,14 @@ function AccountsCard({
   );
 }
 
-export function DashboardPage() {
+export function Investments() {
   const { t } = useTranslation();
-  const { data: allAccounts = [] } = useAccounts();
-  const accounts = useMemo(
-    () => allAccounts.filter(account => !account.closed),
-    [allAccounts],
-  );
-  const balances = useAccountBalances(accounts.map(account => account.id));
-  const [storedCdbAccount] = useSyncedPref('dashboard-cdb-account');
-  const cdbAccountId =
-    storedCdbAccount ??
-    accounts.find(account => /cdb|invest/i.test(account.name))?.id ??
-    '';
+  const { isNarrowWidth } = useResponsive();
+  const navigate = useNavigate();
+  const { accounts, balances, cdbAccountId, cdbBalance, accountsTotal } =
+    useInvestmentAccounts();
   const [btcCents, setBtcCents] = useState(0);
 
-  const cdbBalance = balances[cdbAccountId] ?? 0;
-  const accountsTotal = accounts.reduce(
-    (sum, account) => sum + (balances[account.id] ?? 0),
-    0,
-  );
   const cash = accountsTotal - cdbBalance;
   const invested = Math.max(cdbBalance, 0) + btcCents;
 
@@ -660,7 +650,21 @@ export function DashboardPage() {
   ];
 
   return (
-    <Page header={t('Dashboard')} padding={20}>
+    <Page
+      header={
+        isNarrowWidth ? (
+          <MobilePageHeader
+            title={t('Investments')}
+            leftContent={
+              <MobileBackButton onPress={() => navigate('/reports')} />
+            }
+          />
+        ) : (
+          <PageHeader title={t('Investments')} />
+        )
+      }
+      padding={20}
+    >
       <View
         style={{
           gap: 20,

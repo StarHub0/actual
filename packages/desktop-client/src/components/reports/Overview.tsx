@@ -62,6 +62,7 @@ import { CashFlowCard } from './reports/CashFlowCard';
 import { CrossoverCard } from './reports/CrossoverCard';
 import { CustomReportListCards } from './reports/CustomReportListCards';
 import { FormulaCard } from './reports/FormulaCard';
+import { InvestmentsBanner } from './reports/investments/InvestmentsBanner';
 import { MarkdownCard } from './reports/MarkdownCard';
 import { MissingReportCard } from './reports/MissingReportCard';
 import { MonteCarloCard } from './reports/monte-carlo/MonteCarloCard';
@@ -762,6 +763,7 @@ export function Overview({ dashboard }: OverviewProps) {
         <LoadingIndicator message={t('Import is running...')} />
       ) : (
         <div>
+          <InvestmentsBanner />
           <View
             data-testid="reports-overview"
             innerRef={containerRef}

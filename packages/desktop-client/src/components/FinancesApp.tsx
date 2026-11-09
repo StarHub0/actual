@@ -27,7 +27,6 @@ import { UserDirectoryPage } from './admin/UserDirectory/UserDirectoryPage';
 import { BankSyncStatus } from './BankSyncStatus';
 import { CommandBar } from './CommandBar';
 import { ContextMenu } from './ContextMenu';
-import { DashboardPage } from './dashboard/DashboardPage';
 import { EnableBankingCallback } from './EnableBankingCallback';
 import { FeatureErrorFallback } from './FeatureErrorFallback';
 import { GlobalKeys } from './GlobalKeys';
@@ -268,7 +267,6 @@ export function FinancesApp() {
 
                     <Route path="/reports/*" element={<Reports />} />
 
-                    <Route path="/dashboard" element={<DashboardPage />} />
                     <Route path="/goals" element={<GoalsPage />} />
 
                     <Route
