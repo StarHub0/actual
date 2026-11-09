@@ -24,7 +24,7 @@ export function BitcoinCard({ portfolio }: { portfolio: Portfolio }) {
   const profit = portfolio.btcProfit;
 
   return (
-    <Card style={{ flex: '1 1 380px', gap: 14 }}>
+    <Card style={{ gap: 14 }}>
       <View
         style={{
           flexDirection: 'row',

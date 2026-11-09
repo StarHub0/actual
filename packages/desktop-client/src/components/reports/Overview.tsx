@@ -62,7 +62,7 @@ import { CashFlowCard } from './reports/CashFlowCard';
 import { CrossoverCard } from './reports/CrossoverCard';
 import { CustomReportListCards } from './reports/CustomReportListCards';
 import { FormulaCard } from './reports/FormulaCard';
-import { InvestmentsBanner } from './reports/investments/InvestmentsBanner';
+import { InvestmentsSection } from './reports/investments/InvestmentsSection';
 import { MarkdownCard } from './reports/MarkdownCard';
 import { MissingReportCard } from './reports/MissingReportCard';
 import { MonteCarloCard } from './reports/monte-carlo/MonteCarloCard';
@@ -763,7 +763,7 @@ export function Overview({ dashboard }: OverviewProps) {
         <LoadingIndicator message={t('Import is running...')} />
       ) : (
         <div>
-          <InvestmentsBanner />
+          <InvestmentsSection />
           {!isLoading && widgets.length === 0 && (
             <View style={{ padding: 40, alignItems: 'center', gap: 12 }}>
               <Trans>This dashboard has no reports yet</Trans>

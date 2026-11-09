@@ -18,7 +18,7 @@ export function CdbCard({ portfolio }: { portfolio: Portfolio }) {
   const { cdbMonthly, cdbYearly } = portfolio;
 
   return (
-    <Card style={{ flex: '1 1 380px', gap: 14 }}>
+    <Card style={{ gap: 14 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <AssetBadge color="#ec7000">I</AssetBadge>
         <View>

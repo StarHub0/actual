@@ -13,7 +13,6 @@ import { CashFlow } from './reports/CashFlow';
 import { Crossover } from './reports/Crossover';
 import { CustomReport } from './reports/CustomReport';
 import { Formula } from './reports/Formula';
-import { Investments } from './reports/investments/Investments';
 import { MonteCarlo } from './reports/monte-carlo/MonteCarlo';
 import { NetWorth } from './reports/NetWorth';
 import { Sankey } from './reports/Sankey';
@@ -43,14 +42,6 @@ export function ReportRouter() {
     <Routes>
       <Route path="/" element={<ReportsDashboardRouter />} />
       <Route path="/:dashboardId" element={<ReportsDashboardRouter />} />
-      <Route
-        path="/investments"
-        element={
-          <ReportBoundary>
-            <Investments />
-          </ReportBoundary>
-        }
-      />
       <Route
         path="/net-worth"
         element={
