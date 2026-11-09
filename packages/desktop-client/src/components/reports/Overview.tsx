@@ -19,6 +19,7 @@ import type {
   DashboardPageEntity,
   DashboardWidgetEntity,
   ExportImportDashboard,
+  InvestmentWidget,
   MarkdownWidget,
 } from '@actual-app/core/types/models';
 
@@ -62,7 +63,7 @@ import { CashFlowCard } from './reports/CashFlowCard';
 import { CrossoverCard } from './reports/CrossoverCard';
 import { CustomReportListCards } from './reports/CustomReportListCards';
 import { FormulaCard } from './reports/FormulaCard';
-import { InvestmentsSection } from './reports/investments/InvestmentsSection';
+import { InvestmentCard } from './reports/InvestmentCard';
 import { MarkdownCard } from './reports/MarkdownCard';
 import { MissingReportCard } from './reports/MissingReportCard';
 import { MonteCarloCard } from './reports/monte-carlo/MonteCarloCard';
@@ -79,9 +80,37 @@ function getWidgetMinHeight(widget: DashboardWidgetEntity) {
       return 1;
     case 'sankey-card':
       return 3;
+    case 'investment-card':
+      return widget.meta.asset === 'summary' ? 2 : 3;
     default:
       return 2;
   }
+}
+
+const investmentAssets: InvestmentWidget['meta']['asset'][] = [
+  'summary',
+  'bitcoin',
+  'litecoin',
+  'cdb',
+];
+
+type InvestmentMenuName =
+  | 'investment-card-all'
+  | `investment-card-${InvestmentWidget['meta']['asset']}`;
+
+function isInvestmentMenuName(name: string): name is InvestmentMenuName {
+  return name.startsWith('investment-card-');
+}
+
+function getNewWidgetHeight(
+  type: DashboardWidgetEntity['type'],
+  meta: DashboardWidgetEntity['meta'],
+) {
+  if (type === 'sankey-card') return 3;
+  if (type === 'investment-card') {
+    return (meta as InvestmentWidget['meta']).asset === 'summary' ? 2 : 4;
+  }
+  return 2;
 }
 
 function getWidgetMinWidth(widget: DashboardWidgetEntity) {
@@ -292,7 +321,7 @@ export function Overview({ dashboard }: OverviewProps) {
       widget: {
         type,
         width: 4,
-        height: type === 'sankey-card' ? 3 : 2,
+        height: getNewWidgetHeight(type, meta),
         meta,
         dashboard_page_id: dashboard.id,
       },
@@ -573,6 +602,24 @@ export function Overview({ dashboard }: OverviewProps) {
                               return;
                             }
 
+                            if (isInvestmentMenuName(item)) {
+                              const assets =
+                                item === 'investment-card-all'
+                                  ? investmentAssets
+                                  : [
+                                      item.slice(
+                                        'investment-card-'.length,
+                                      ) as InvestmentWidget['meta']['asset'],
+                                    ];
+                              for (const asset of assets) {
+                                onAddWidget<InvestmentWidget>(
+                                  'investment-card',
+                                  { asset },
+                                );
+                              }
+                              return;
+                            }
+
                             if (item === 'markdown-card') {
                               onAddWidget<MarkdownWidget>(item, {
                                 content: `### ${t('Text Widget')}\n\n${t('Edit this widget to change the **markdown** content.')}`,
@@ -627,6 +674,26 @@ export function Overview({ dashboard }: OverviewProps) {
                                   },
                                 ]
                               : []),
+                            {
+                              name: 'investment-card-all' as const,
+                              text: t('Investments (all)'),
+                            },
+                            {
+                              name: 'investment-card-summary' as const,
+                              text: t('Investments summary'),
+                            },
+                            {
+                              name: 'investment-card-bitcoin' as const,
+                              text: 'Bitcoin',
+                            },
+                            {
+                              name: 'investment-card-litecoin' as const,
+                              text: 'Litecoin',
+                            },
+                            {
+                              name: 'investment-card-cdb' as const,
+                              text: 'CDB Itaú',
+                            },
                             {
                               name: 'markdown-card' as const,
                               text: t('Text widget'),
@@ -763,7 +830,6 @@ export function Overview({ dashboard }: OverviewProps) {
         <LoadingIndicator message={t('Import is running...')} />
       ) : (
         <div>
-          <InvestmentsSection />
           {!isLoading && widgets.length === 0 && (
             <View style={{ padding: 40, alignItems: 'center', gap: 12 }}>
               <Trans>This dashboard has no reports yet</Trans>
@@ -882,6 +948,12 @@ export function Overview({ dashboard }: OverviewProps) {
                             onMetaChange={newMeta =>
                               onMetaChange(item, newMeta)
                             }
+                          />
+                        ) : widget.type === 'investment-card' ? (
+                          <InvestmentCard
+                            widgetId={item.i}
+                            isEditing={isEditing}
+                            meta={widget.meta}
                           />
                         ) : widget.type === 'markdown-card' ? (
                           <MarkdownCard

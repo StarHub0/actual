@@ -8,14 +8,20 @@ import { theme } from '@actual-app/components/theme';
 import { View } from '@actual-app/components/view';
 import type { AccountEntity } from '@actual-app/core/types/models';
 
+import { NON_DRAGGABLE_AREA_CLASS_NAME } from '#components/reports/constants';
 import { useSyncedPref } from '#hooks/useSyncedPref';
 
 type DecimalPref =
   | 'dashboard-btc-amount'
   | 'dashboard-btc-cost'
+  | 'dashboard-ltc-amount'
+  | 'dashboard-ltc-cost'
   | 'dashboard-cdb-cdi';
 
-type AccountPref = 'dashboard-btc-account' | 'dashboard-cdb-account';
+type AccountPref =
+  | 'dashboard-btc-account'
+  | 'dashboard-ltc-account'
+  | 'dashboard-cdb-account';
 
 const labelStyle = { ...styles.smallText, color: theme.pageTextSubdued };
 
@@ -94,16 +100,18 @@ export function AccountSelect({
 
 export function SettingsRow({ children }: { children: ReactNode }) {
   return (
-    <View
-      style={{
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 12,
-        paddingTop: 14,
-        borderTop: `1px solid ${theme.tableBorder}`,
-      }}
-    >
-      {children}
-    </View>
+    <div className={NON_DRAGGABLE_AREA_CLASS_NAME}>
+      <View
+        style={{
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          gap: 12,
+          paddingTop: 14,
+          borderTop: `1px solid ${theme.tableBorder}`,
+        }}
+      >
+        {children}
+      </View>
+    </div>
   );
 }

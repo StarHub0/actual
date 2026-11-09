@@ -397,6 +397,7 @@ type SpecializedWidget =
   | BudgetAnalysisWidget
   | CrossoverWidget
   | MarkdownWidget
+  | InvestmentWidget
   | MonteCarloWidget
   | SummaryWidget
   | CalendarWidget
@@ -463,6 +464,11 @@ export type CalendarWidget = AbstractWidget<
     conditionsOp?: 'and' | 'or';
     timeFrame?: TimeFrame;
   } | null
+>;
+
+export type InvestmentWidget = AbstractWidget<
+  'investment-card',
+  { asset: 'summary' | 'bitcoin' | 'litecoin' | 'cdb' }
 >;
 
 export type FormulaWidget = AbstractWidget<

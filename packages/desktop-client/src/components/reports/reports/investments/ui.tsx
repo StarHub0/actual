@@ -1,13 +1,16 @@
 import React from 'react';
-import type { CSSProperties, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
 import { View } from '@actual-app/components/view';
 
+import { ReportCard } from '#components/reports/ReportCard';
+
 export const colors = {
   btc: '#f7931a',
+  ltc: '#6f8fd8',
   cdb: theme.pageTextLink,
   cash: theme.pageTextSubdued,
 };
@@ -15,50 +18,56 @@ export const colors = {
 export const numeric = { fontVariantNumeric: 'tabular-nums' } as const;
 
 export function WidgetCard({
+  widgetId,
+  isEditing,
   title,
   subtitle,
   right,
   children,
-  style,
 }: {
+  widgetId: string;
+  isEditing?: boolean;
   title: ReactNode;
   subtitle?: ReactNode;
   right?: ReactNode;
   children: ReactNode;
-  style?: CSSProperties;
 }) {
   return (
-    <View
-      style={{
-        backgroundColor: theme.tableBackground,
-        borderRadius: 2,
-        boxShadow: '0 2px 6px rgba(0, 0, 0, .15)',
-        padding: 20,
-        minWidth: 0,
-        gap: 14,
-        ...style,
-      }}
-    >
+    <ReportCard widgetId={widgetId} isEditing={isEditing}>
       <View
         style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          gap: 12,
+          padding: 20,
+          gap: 14,
+          height: '100%',
+          overflowY: 'auto',
+          minWidth: 0,
         }}
       >
-        <View style={{ minWidth: 0 }}>
-          <Text style={{ ...styles.mediumText, fontWeight: 500 }}>{title}</Text>
-          {subtitle && (
-            <Text style={{ ...styles.smallText, color: theme.pageTextSubdued }}>
-              {subtitle}
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            gap: 12,
+          }}
+        >
+          <View style={{ minWidth: 0 }}>
+            <Text style={{ ...styles.mediumText, fontWeight: 500 }}>
+              {title}
             </Text>
-          )}
+            {subtitle && (
+              <Text
+                style={{ ...styles.smallText, color: theme.pageTextSubdued }}
+              >
+                {subtitle}
+              </Text>
+            )}
+          </View>
+          {right}
         </View>
-        {right}
+        {children}
       </View>
-      {children}
-    </View>
+    </ReportCard>
   );
 }
 

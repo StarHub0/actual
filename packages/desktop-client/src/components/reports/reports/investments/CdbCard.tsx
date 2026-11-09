@@ -12,7 +12,15 @@ import { ScheduleLine } from './ScheduleLine';
 import { numeric, Stat, WidgetCard } from './ui';
 import type { Portfolio } from './usePortfolio';
 
-export function CdbCard({ portfolio }: { portfolio: Portfolio }) {
+export function CdbCard({
+  portfolio,
+  widgetId,
+  isEditing,
+}: {
+  portfolio: Portfolio;
+  widgetId: string;
+  isEditing?: boolean;
+}) {
   const { t } = useTranslation();
   const format = useFormat();
   const [editing, setEditing] = useState(false);
@@ -20,6 +28,8 @@ export function CdbCard({ portfolio }: { portfolio: Portfolio }) {
 
   return (
     <WidgetCard
+      widgetId={widgetId}
+      isEditing={isEditing}
       title="CDB Itaú"
       subtitle={
         portfolio.cdbRate == null

@@ -24,6 +24,7 @@ const ALL_WIDGET_TYPES = allWidgetTypes(
   'crossover-card',
   'budget-analysis-card',
   'markdown-card',
+  'investment-card',
   'summary-card',
   'calendar-card',
   'formula-card',

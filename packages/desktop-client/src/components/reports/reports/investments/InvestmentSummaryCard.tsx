@@ -11,11 +11,20 @@ import { useFormat } from '#hooks/useFormat';
 import { colors, numeric, WidgetCard } from './ui';
 import type { Portfolio } from './usePortfolio';
 
-export function SummaryCard({ portfolio }: { portfolio: Portfolio }) {
+export function InvestmentSummaryCard({
+  portfolio,
+  widgetId,
+  isEditing,
+}: {
+  portfolio: Portfolio;
+  widgetId: string;
+  isEditing?: boolean;
+}) {
   const { t } = useTranslation();
   const format = useFormat();
   const slices = [
-    { name: 'Bitcoin', value: portfolio.btcCents, color: colors.btc },
+    { name: 'Bitcoin', value: portfolio.bitcoin.cents, color: colors.btc },
+    { name: 'Litecoin', value: portfolio.litecoin.cents, color: colors.ltc },
     {
       name: 'CDB Itaú',
       value: Math.max(portfolio.cdbBalance, 0),
@@ -31,6 +40,8 @@ export function SummaryCard({ portfolio }: { portfolio: Portfolio }) {
 
   return (
     <WidgetCard
+      widgetId={widgetId}
+      isEditing={isEditing}
       title={<Trans>Investments</Trans>}
       subtitle={t('Net worth {{amount}}', {
         amount: format(portfolio.netWorth, 'financial'),

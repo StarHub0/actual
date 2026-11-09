@@ -9,40 +9,61 @@ import { Area, AreaChart, Tooltip as ChartTooltip, YAxis } from 'recharts';
 
 import { useFormat } from '#hooks/useFormat';
 
-import { brl, historyRanges, useBitcoinHistory } from './bitcoinMarket';
+import {
+  brl,
+  cryptoAssets,
+  historyRanges,
+  useCryptoHistory,
+} from './cryptoMarket';
+import type { CryptoAsset } from './cryptoMarket';
 import { AccountSelect, PrefInput, SettingsRow } from './PrefInput';
 import { ScheduleLine } from './ScheduleLine';
-import { Chip, colors, numeric, Stat, WidgetCard } from './ui';
-import type { Portfolio } from './usePortfolio';
+import { Chip, numeric, Stat, WidgetCard } from './ui';
+import type { CryptoPosition } from './usePortfolio';
 
-export function BitcoinCard({ portfolio }: { portfolio: Portfolio }) {
+export function CryptoCard({
+  asset,
+  position,
+  accounts,
+  widgetId,
+  isEditing,
+}: {
+  asset: CryptoAsset;
+  position: CryptoPosition;
+  accounts: Parameters<typeof AccountSelect>[0]['accounts'];
+  widgetId: string;
+  isEditing?: boolean;
+}) {
   const { t } = useTranslation();
   const format = useFormat();
+  const config = cryptoAssets[asset];
   const [days, setDays] = useState(30);
   const [editing, setEditing] = useState(false);
-  const history = useBitcoinHistory(days);
+  const history = useCryptoHistory(asset, days);
   const points = history.data ?? [];
   const rising =
     (points[points.length - 1]?.price ?? 0) >= (points[0]?.price ?? 0);
   const lineColor = rising
     ? theme.reportsNumberPositive
     : theme.reportsNumberNegative;
-  const { btcProfit, btcInvested } = portfolio;
+  const { profit, invested } = position;
 
   return (
     <WidgetCard
-      title={t('Bitcoin')}
-      subtitle="BTC / BRL"
+      widgetId={widgetId}
+      isEditing={isEditing}
+      title={config.name}
+      subtitle={`${config.symbol} / BRL`}
       right={
         <View style={{ alignItems: 'flex-end' }}>
           <Text style={{ ...numeric, fontSize: 20, fontWeight: 500 }}>
-            {portfolio.btcPrice > 0 ? brl.format(portfolio.btcPrice) : '—'}
+            {position.price > 0 ? brl.format(position.price) : '—'}
           </Text>
-          <Chip value={portfolio.quote?.change24h ?? null} />
+          <Chip value={position.quote?.change24h ?? null} />
         </View>
       }
     >
-      <View style={{ height: 110 }}>
+      <View style={{ height: 110, flexShrink: 0 }}>
         {history.isError ? (
           <Text style={{ color: theme.pageTextSubdued }}>
             <Trans>Price history unavailable</Trans>
@@ -55,7 +76,7 @@ export function BitcoinCard({ portfolio }: { portfolio: Portfolio }) {
             margin={{ top: 4, right: 0, bottom: 0, left: 0 }}
           >
             <defs>
-              <linearGradient id="btcFill" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id={`${asset}Fill`} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={lineColor} stopOpacity={0.25} />
                 <stop offset="100%" stopColor={lineColor} stopOpacity={0} />
               </linearGradient>
@@ -68,7 +89,7 @@ export function BitcoinCard({ portfolio }: { portfolio: Portfolio }) {
                 borderRadius: 4,
                 color: theme.menuItemText,
               }}
-              formatter={value => [brl.format(Number(value)), 'BTC']}
+              formatter={value => [brl.format(Number(value)), config.symbol]}
               labelFormatter={time =>
                 new Date(Number(time)).toLocaleDateString('pt-BR', {
                   day: '2-digit',
@@ -81,7 +102,7 @@ export function BitcoinCard({ portfolio }: { portfolio: Portfolio }) {
               dataKey="price"
               stroke={lineColor}
               strokeWidth={2}
-              fill="url(#btcFill)"
+              fill={`url(#${asset}Fill)`}
               isAnimationActive={false}
               dot={false}
             />
@@ -103,7 +124,8 @@ export function BitcoinCard({ portfolio }: { portfolio: Portfolio }) {
               variant="bare"
               onPress={() => setDays(range.days)}
               style={{
-                color: days === range.days ? colors.btc : theme.pageTextSubdued,
+                color:
+                  days === range.days ? config.color : theme.pageTextSubdued,
                 fontWeight: days === range.days ? 600 : 400,
               }}
             >
@@ -119,46 +141,44 @@ export function BitcoinCard({ portfolio }: { portfolio: Portfolio }) {
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 24 }}>
         <Stat
           label={<Trans>Invested</Trans>}
-          value={btcInvested == null ? '—' : format(btcInvested, 'financial')}
+          value={invested == null ? '—' : format(invested, 'financial')}
         />
         <Stat
           label={<Trans>Position</Trans>}
           value={
-            portfolio.btcAmount > 0
-              ? format(portfolio.btcCents, 'financial')
-              : '—'
+            position.amount > 0 ? format(position.cents, 'financial') : '—'
           }
         />
         <Stat
           label={<Trans>Profit</Trans>}
           value={
-            btcProfit == null
+            profit == null
               ? '—'
-              : `${btcProfit >= 0 ? '+' : ''}${format(btcProfit, 'financial')}`
+              : `${profit >= 0 ? '+' : ''}${format(profit, 'financial')}`
           }
-          tone={btcProfit == null ? undefined : btcProfit >= 0 ? 'good' : 'bad'}
+          tone={profit == null ? undefined : profit >= 0 ? 'good' : 'bad'}
         />
       </View>
 
-      <ScheduleLine next={portfolio.btcNext} />
+      <ScheduleLine next={position.next} />
 
       {editing && (
         <SettingsRow>
           <PrefInput
-            prefKey="dashboard-btc-amount"
-            label={t('Bitcoin held (BTC)')}
+            prefKey={config.amountPref}
+            label={t('{{symbol}} held', { symbol: config.symbol })}
             placeholder="0,00000000"
           />
           <AccountSelect
-            prefKey="dashboard-btc-account"
-            label={t('Bitcoin account')}
-            accounts={portfolio.accounts}
-            value={portfolio.btcAccountId}
+            prefKey={config.accountPref}
+            label={t('{{name}} account', { name: config.name })}
+            accounts={accounts}
+            value={position.accountId}
             emptyLabel={t('None')}
           />
-          {portfolio.btcAccountId === '' && (
+          {position.accountId === '' && (
             <PrefInput
-              prefKey="dashboard-btc-cost"
+              prefKey={config.costPref}
               label={t('Total paid (BRL)')}
               placeholder="0,00"
             />
