@@ -24,7 +24,7 @@ export function InvestmentsBanner() {
         textDecoration: 'none',
         color: 'inherit',
         display: 'block',
-        marginBottom: 8,
+        margin: '10px 10px 0',
       }}
     >
       <View
