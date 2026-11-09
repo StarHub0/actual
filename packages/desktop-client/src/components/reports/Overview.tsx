@@ -764,6 +764,14 @@ export function Overview({ dashboard }: OverviewProps) {
       ) : (
         <div>
           <InvestmentsBanner />
+          {!isLoading && widgets.length === 0 && (
+            <View style={{ padding: 40, alignItems: 'center', gap: 12 }}>
+              <Trans>This dashboard has no reports yet</Trans>
+              <Button variant="primary" onPress={() => void onResetDashboard()}>
+                <Trans>Add the default reports</Trans>
+              </Button>
+            </View>
+          )}
           <View
             data-testid="reports-overview"
             innerRef={containerRef}
