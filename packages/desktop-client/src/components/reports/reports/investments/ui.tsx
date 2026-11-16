@@ -41,6 +41,7 @@ export function WidgetCard({
           height: '100%',
           overflowY: 'auto',
           minWidth: 0,
+          '& > *': { flexShrink: 0 },
         }}
       >
         <View

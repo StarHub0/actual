@@ -12,6 +12,7 @@ import { useFormat } from '#hooks/useFormat';
 import { CandleChart } from './CandleChart';
 import {
   brl,
+  brlCompact,
   cryptoAssets,
   historyRanges,
   useCryptoCandles,
@@ -21,13 +22,6 @@ import { AccountSelect, PrefInput, SettingsRow } from './PrefInput';
 import { ScheduleLine } from './ScheduleLine';
 import { Chip, numeric, Segmented, Stat, WidgetCard } from './ui';
 import type { CryptoPosition } from './usePortfolio';
-
-const compact = new Intl.NumberFormat('pt-BR', {
-  style: 'currency',
-  currency: 'BRL',
-  notation: 'compact',
-  maximumFractionDigits: 1,
-});
 
 function PositionPanel({
   position,
@@ -245,7 +239,7 @@ export function CryptoCard({
         />
       </View>
 
-      <View style={{ height: 210, flexShrink: 0 }}>
+      <View style={{ height: 220 }}>
         {candlesQuery.isError ? (
           <Text style={{ color: theme.pageTextSubdued }}>
             <Trans>Price history unavailable</Trans>
@@ -257,7 +251,7 @@ export function CryptoCard({
             candles={candles}
             mode={mode}
             range={range}
-            height={210}
+            height={220}
           />
         )}
       </View>
@@ -284,15 +278,15 @@ export function CryptoCard({
         />
         <Stat
           label={t('High')}
-          value={rangeHigh == null ? '—' : brl.format(rangeHigh)}
+          value={rangeHigh == null ? '—' : brlCompact.format(rangeHigh)}
         />
         <Stat
           label={t('Low')}
-          value={rangeLow == null ? '—' : brl.format(rangeLow)}
+          value={rangeLow == null ? '—' : brlCompact.format(rangeLow)}
         />
         <Stat
           label={t('Volume 24h')}
-          value={quote?.volume24h ? compact.format(quote.volume24h) : '—'}
+          value={quote?.volume24h ? brlCompact.format(quote.volume24h) : '—'}
         />
       </View>
 

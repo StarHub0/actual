@@ -187,3 +187,10 @@ export function useCdiRate() {
     retry: 1,
   });
 }
+
+export const brlCompact = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+  notation: 'compact',
+  maximumFractionDigits: 1,
+});
