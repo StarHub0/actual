@@ -31,31 +31,19 @@ export function CarryoverIndicator({ style }: CarryoverIndicatorProps) {
       style={{
         marginLeft: 2,
         position: 'absolute',
-        right: '-8px',
+        right: '-4px',
         alignSelf: 'center',
         justifyContent: 'center',
-        alignItems: 'center',
         top: 0,
         bottom: 0,
+        ...style,
       }}
     >
-      <View
-        style={{
-          width: 13,
-          height: 13,
-          borderRadius: 7,
-          backgroundColor: theme.pageTextLink,
-          alignItems: 'center',
-          justifyContent: 'center',
-          opacity: 0.9,
-        }}
-      >
-        <SvgArrowThinRight
-          width={7}
-          height={7}
-          style={{ color: theme.buttonPrimaryText }}
-        />
-      </View>
+      <SvgArrowThinRight
+        width={style?.width || 7}
+        height={style?.height || 7}
+        style={style}
+      />
     </View>
   );
 }

@@ -70,12 +70,8 @@ export const BudgetSummary = memo(({ month }: BudgetSummaryProps) => {
           month === currentMonth
             ? theme.budgetCurrentMonth
             : theme.budgetOtherMonth,
-        border: '1px solid ' + theme.tableBorder,
-        borderTop:
-          month === currentMonth
-            ? '3px solid ' + theme.pageTextLink
-            : '1px solid ' + theme.tableBorder,
-        borderRadius: 16,
+        boxShadow: styles.cardShadow,
+        borderRadius: 6,
         marginLeft: 0,
         marginRight: 0,
         marginTop: 5,
@@ -130,9 +126,8 @@ export const BudgetSummary = memo(({ month }: BudgetSummaryProps) => {
               {
                 textAlign: 'center',
                 marginTop: 3,
-                fontSize: 20,
-                fontWeight: 600,
-                letterSpacing: 0.3,
+                fontSize: 18,
+                fontWeight: 500,
                 textDecorationSkip: 'ink',
               },
               currentMonth === month && { fontWeight: 'bold' },
@@ -278,10 +273,9 @@ export const BudgetSummary = memo(({ month }: BudgetSummaryProps) => {
                 padding: '5px 0',
                 marginTop: 17,
                 backgroundColor: theme.budgetHeaderCurrentMonth,
-                borderTopWidth: 0,
-                borderBottomWidth: 0,
-                borderRadius: 10,
-                margin: '17px 12px 0',
+                borderTopWidth: 1,
+                borderBottomWidth: 1,
+                borderColor: theme.tableBorder,
               }}
             />
             <View style={{ margin: '23px 0' }}>
