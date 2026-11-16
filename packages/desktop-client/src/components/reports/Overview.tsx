@@ -64,6 +64,7 @@ import { CrossoverCard } from './reports/CrossoverCard';
 import { CustomReportListCards } from './reports/CustomReportListCards';
 import { FormulaCard } from './reports/FormulaCard';
 import { InvestmentCard } from './reports/InvestmentCard';
+import { InvestmentsProvider } from './reports/investments/PortfolioProvider';
 import { MarkdownCard } from './reports/MarkdownCard';
 import { MissingReportCard } from './reports/MissingReportCard';
 import { MonteCarloCard } from './reports/monte-carlo/MonteCarloCard';
@@ -844,188 +845,194 @@ export function Overview({ dashboard }: OverviewProps) {
             innerRef={containerRef}
             style={{ userSelect: 'none', paddingBottom: MOBILE_NAV_HEIGHT }}
           >
-            {isMounted && (
-              <ReactGridLayout
-                width={containerWidth}
-                layout={currentLayout}
-                gridConfig={{
-                  cols: currentBreakpoint === 'desktop' ? 12 : 1,
-                  rowHeight: 100,
-                }}
-                dragConfig={{
-                  enabled: currentBreakpoint === 'desktop' && isEditing,
-                  cancel: `.${NON_DRAGGABLE_AREA_CLASS_NAME}`,
-                }}
-                resizeConfig={{
-                  enabled: currentBreakpoint === 'desktop' && isEditing,
-                }}
-                onLayoutChange={
-                  currentBreakpoint === 'desktop' ? onLayoutChange : undefined
-                }
-              >
-                {currentLayout.map(item => {
-                  const widget = widgetMap.get(item.i);
-
-                  if (!widget) {
-                    return null;
+            <InvestmentsProvider
+              enabled={widgets.some(
+                widget => widget.type === 'investment-card',
+              )}
+            >
+              {isMounted && (
+                <ReactGridLayout
+                  width={containerWidth}
+                  layout={currentLayout}
+                  gridConfig={{
+                    cols: currentBreakpoint === 'desktop' ? 12 : 1,
+                    rowHeight: 100,
+                  }}
+                  dragConfig={{
+                    enabled: currentBreakpoint === 'desktop' && isEditing,
+                    cancel: `.${NON_DRAGGABLE_AREA_CLASS_NAME}`,
+                  }}
+                  resizeConfig={{
+                    enabled: currentBreakpoint === 'desktop' && isEditing,
+                  }}
+                  onLayoutChange={
+                    currentBreakpoint === 'desktop' ? onLayoutChange : undefined
                   }
+                >
+                  {currentLayout.map(item => {
+                    const widget = widgetMap.get(item.i);
 
-                  return (
-                    <div key={item.i}>
-                      <ErrorBoundary
-                        fallbackRender={() => (
-                          <MissingReportCard
-                            widgetId={item.i}
-                            isEditing={isEditing}
-                          >
-                            <Trans>This widget has failed to load.</Trans>
-                          </MissingReportCard>
-                        )}
-                      >
-                        {widget.type === 'net-worth-card' ? (
-                          <NetWorthCard
-                            widgetId={item.i}
-                            isEditing={isEditing}
-                            accounts={accounts}
-                            meta={widget.meta}
-                            onMetaChange={newMeta =>
-                              onMetaChange(item, newMeta)
-                            }
-                          />
-                        ) : widget.type === 'crossover-card' ? (
-                          <CrossoverCard
-                            widgetId={item.i}
-                            isEditing={isEditing}
-                            accounts={accounts}
-                            meta={widget.meta}
-                            onMetaChange={newMeta =>
-                              onMetaChange(item, newMeta)
-                            }
-                          />
-                        ) : widget.type === 'age-of-money-card' ? (
-                          <AgeOfMoneyCard
-                            widgetId={item.i}
-                            isEditing={isEditing}
-                            meta={widget.meta}
-                            onMetaChange={newMeta =>
-                              onMetaChange(item, newMeta)
-                            }
-                          />
-                        ) : widget.type === 'cash-flow-card' ? (
-                          <CashFlowCard
-                            widgetId={item.i}
-                            isEditing={isEditing}
-                            meta={widget.meta}
-                            onMetaChange={newMeta =>
-                              onMetaChange(item, newMeta)
-                            }
-                          />
-                        ) : widget.type === 'spending-card' ? (
-                          <SpendingCard
-                            widgetId={item.i}
-                            isEditing={isEditing}
-                            meta={widget.meta}
-                            onMetaChange={newMeta =>
-                              onMetaChange(item, newMeta)
-                            }
-                          />
-                        ) : widget.type === 'budget-analysis-card' &&
-                          budgetAnalysisReportEnabled ? (
-                          <BudgetAnalysisCard
-                            widgetId={item.i}
-                            isEditing={isEditing}
-                            meta={widget.meta}
-                            onMetaChange={newMeta =>
-                              onMetaChange(item, newMeta)
-                            }
-                          />
-                        ) : widget.type === 'balance-forecast-card' &&
-                          balanceForecastReportEnabled ? (
-                          <BalanceForecastCard
-                            widgetId={item.i}
-                            isEditing={isEditing}
-                            accounts={accounts}
-                            meta={widget.meta}
-                            onMetaChange={newMeta =>
-                              onMetaChange(item, newMeta)
-                            }
-                          />
-                        ) : widget.type === 'investment-card' ? (
-                          <InvestmentCard
-                            widgetId={item.i}
-                            isEditing={isEditing}
-                            meta={widget.meta}
-                          />
-                        ) : widget.type === 'markdown-card' ? (
-                          <MarkdownCard
-                            widgetId={item.i}
-                            isEditing={isEditing}
-                            meta={widget.meta}
-                            onMetaChange={newMeta =>
-                              onMetaChange(item, newMeta)
-                            }
-                          />
-                        ) : widget.type === 'custom-report' ? (
-                          <CustomReportListCards
-                            widgetId={item.i}
-                            isEditing={isEditing}
-                            report={customReportMap.get(widget.meta.id)}
-                          />
-                        ) : widget.type === 'summary-card' ? (
-                          <SummaryCard
-                            widgetId={item.i}
-                            isEditing={isEditing}
-                            meta={widget.meta}
-                            onMetaChange={newMeta =>
-                              onMetaChange(item, newMeta)
-                            }
-                          />
-                        ) : widget.type === 'calendar-card' ? (
-                          <CalendarCard
-                            widgetId={item.i}
-                            isEditing={isEditing}
-                            meta={widget.meta}
-                            firstDayOfWeekIdx={firstDayOfWeekIdx}
-                            onMetaChange={newMeta =>
-                              onMetaChange(item, newMeta)
-                            }
-                          />
-                        ) : widget.type === 'formula-card' && formulaMode ? (
-                          <FormulaCard
-                            widgetId={item.i}
-                            isEditing={isEditing}
-                            meta={widget.meta}
-                            onMetaChange={newMeta =>
-                              onMetaChange(item, newMeta)
-                            }
-                          />
-                        ) : widget.type === 'sankey-card' &&
-                          sankeyFeatureFlag ? (
-                          <SankeyCard
-                            widgetId={item.i}
-                            isEditing={isEditing}
-                            meta={widget.meta}
-                            onMetaChange={newMeta =>
-                              onMetaChange(item, newMeta)
-                            }
-                          />
-                        ) : widget.type === 'monte-carlo-card' &&
-                          monteCarloReportEnabled ? (
-                          <MonteCarloCard
-                            widgetId={item.i}
-                            isEditing={isEditing}
-                            meta={widget.meta}
-                            onMetaChange={newMeta =>
-                              onMetaChange(item, newMeta)
-                            }
-                          />
-                        ) : null}
-                      </ErrorBoundary>
-                    </div>
-                  );
-                })}
-              </ReactGridLayout>
-            )}
+                    if (!widget) {
+                      return null;
+                    }
+
+                    return (
+                      <div key={item.i}>
+                        <ErrorBoundary
+                          fallbackRender={() => (
+                            <MissingReportCard
+                              widgetId={item.i}
+                              isEditing={isEditing}
+                            >
+                              <Trans>This widget has failed to load.</Trans>
+                            </MissingReportCard>
+                          )}
+                        >
+                          {widget.type === 'net-worth-card' ? (
+                            <NetWorthCard
+                              widgetId={item.i}
+                              isEditing={isEditing}
+                              accounts={accounts}
+                              meta={widget.meta}
+                              onMetaChange={newMeta =>
+                                onMetaChange(item, newMeta)
+                              }
+                            />
+                          ) : widget.type === 'crossover-card' ? (
+                            <CrossoverCard
+                              widgetId={item.i}
+                              isEditing={isEditing}
+                              accounts={accounts}
+                              meta={widget.meta}
+                              onMetaChange={newMeta =>
+                                onMetaChange(item, newMeta)
+                              }
+                            />
+                          ) : widget.type === 'age-of-money-card' ? (
+                            <AgeOfMoneyCard
+                              widgetId={item.i}
+                              isEditing={isEditing}
+                              meta={widget.meta}
+                              onMetaChange={newMeta =>
+                                onMetaChange(item, newMeta)
+                              }
+                            />
+                          ) : widget.type === 'cash-flow-card' ? (
+                            <CashFlowCard
+                              widgetId={item.i}
+                              isEditing={isEditing}
+                              meta={widget.meta}
+                              onMetaChange={newMeta =>
+                                onMetaChange(item, newMeta)
+                              }
+                            />
+                          ) : widget.type === 'spending-card' ? (
+                            <SpendingCard
+                              widgetId={item.i}
+                              isEditing={isEditing}
+                              meta={widget.meta}
+                              onMetaChange={newMeta =>
+                                onMetaChange(item, newMeta)
+                              }
+                            />
+                          ) : widget.type === 'budget-analysis-card' &&
+                            budgetAnalysisReportEnabled ? (
+                            <BudgetAnalysisCard
+                              widgetId={item.i}
+                              isEditing={isEditing}
+                              meta={widget.meta}
+                              onMetaChange={newMeta =>
+                                onMetaChange(item, newMeta)
+                              }
+                            />
+                          ) : widget.type === 'balance-forecast-card' &&
+                            balanceForecastReportEnabled ? (
+                            <BalanceForecastCard
+                              widgetId={item.i}
+                              isEditing={isEditing}
+                              accounts={accounts}
+                              meta={widget.meta}
+                              onMetaChange={newMeta =>
+                                onMetaChange(item, newMeta)
+                              }
+                            />
+                          ) : widget.type === 'investment-card' ? (
+                            <InvestmentCard
+                              widgetId={item.i}
+                              isEditing={isEditing}
+                              meta={widget.meta}
+                            />
+                          ) : widget.type === 'markdown-card' ? (
+                            <MarkdownCard
+                              widgetId={item.i}
+                              isEditing={isEditing}
+                              meta={widget.meta}
+                              onMetaChange={newMeta =>
+                                onMetaChange(item, newMeta)
+                              }
+                            />
+                          ) : widget.type === 'custom-report' ? (
+                            <CustomReportListCards
+                              widgetId={item.i}
+                              isEditing={isEditing}
+                              report={customReportMap.get(widget.meta.id)}
+                            />
+                          ) : widget.type === 'summary-card' ? (
+                            <SummaryCard
+                              widgetId={item.i}
+                              isEditing={isEditing}
+                              meta={widget.meta}
+                              onMetaChange={newMeta =>
+                                onMetaChange(item, newMeta)
+                              }
+                            />
+                          ) : widget.type === 'calendar-card' ? (
+                            <CalendarCard
+                              widgetId={item.i}
+                              isEditing={isEditing}
+                              meta={widget.meta}
+                              firstDayOfWeekIdx={firstDayOfWeekIdx}
+                              onMetaChange={newMeta =>
+                                onMetaChange(item, newMeta)
+                              }
+                            />
+                          ) : widget.type === 'formula-card' && formulaMode ? (
+                            <FormulaCard
+                              widgetId={item.i}
+                              isEditing={isEditing}
+                              meta={widget.meta}
+                              onMetaChange={newMeta =>
+                                onMetaChange(item, newMeta)
+                              }
+                            />
+                          ) : widget.type === 'sankey-card' &&
+                            sankeyFeatureFlag ? (
+                            <SankeyCard
+                              widgetId={item.i}
+                              isEditing={isEditing}
+                              meta={widget.meta}
+                              onMetaChange={newMeta =>
+                                onMetaChange(item, newMeta)
+                              }
+                            />
+                          ) : widget.type === 'monte-carlo-card' &&
+                            monteCarloReportEnabled ? (
+                            <MonteCarloCard
+                              widgetId={item.i}
+                              isEditing={isEditing}
+                              meta={widget.meta}
+                              onMetaChange={newMeta =>
+                                onMetaChange(item, newMeta)
+                              }
+                            />
+                          ) : null}
+                        </ErrorBoundary>
+                      </div>
+                    );
+                  })}
+                </ReactGridLayout>
+              )}
+            </InvestmentsProvider>
           </View>
         </div>
       )}

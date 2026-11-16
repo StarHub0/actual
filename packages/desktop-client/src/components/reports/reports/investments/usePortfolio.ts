@@ -14,7 +14,7 @@ import {
   useCryptoQuote,
 } from './cryptoMarket';
 import type { CryptoAsset } from './cryptoMarket';
-import { useNetContributed, useNextContribution } from './useAccountInvestment';
+import { useAccountFlows, useNextContribution } from './useAccountInvestment';
 import { useCdbHoldings } from './useCdbHoldings';
 
 function useCryptoPosition(
@@ -32,17 +32,23 @@ function useCryptoPosition(
     storedAccount ??
     accounts.find(account => config.accountPattern.test(account.name))?.id ??
     '';
-  const contributed = useNetContributed(accountId);
+  const flows = useAccountFlows(accountId);
   const next = useNextContribution(accountId);
 
   const amount = parseDecimal(amountText ?? '') ?? 0;
   const price = quote.data?.price ?? 0;
   const cents = toCents(amount * price);
   const manualCost = parseDecimal(costText ?? '');
-  const invested =
-    contributed ?? (manualCost == null ? null : toCents(manualCost));
-  const profit =
-    invested != null && invested > 0 && amount > 0 ? cents - invested : null;
+  const deposited =
+    flows?.deposited ?? (manualCost == null ? null : toCents(manualCost));
+  const withdrawn = flows?.withdrawn ?? 0;
+  const netInvested = deposited == null ? null : deposited - withdrawn;
+  const hasCost = deposited != null && deposited > 0;
+  const profit = hasCost && amount > 0 ? cents + withdrawn - deposited : null;
+  const averagePrice =
+    netInvested != null && netInvested > 0 && amount > 0
+      ? netInvested / 100 / amount
+      : null;
 
   return {
     asset,
@@ -51,10 +57,13 @@ function useCryptoPosition(
     amount,
     price,
     cents,
-    invested,
+    deposited,
+    withdrawn,
+    netInvested,
+    averagePrice,
     profit,
     profitPercent:
-      profit != null && invested ? (profit / invested) * 100 : null,
+      profit != null && deposited ? (profit / deposited) * 100 : null,
     next,
     quote: quote.data ?? null,
   };
@@ -88,7 +97,10 @@ export function usePortfolio() {
     ? Math.round(holdings.reduce((sum, item) => sum + item.applied, 0) * 100)
     : null;
   const cdbBalance = holdingsNet ?? cdbBookBalance;
-  const accountContributed = useNetContributed(cdbAccountId);
+  const accountFlows = useAccountFlows(cdbAccountId);
+  const accountContributed = accountFlows
+    ? accountFlows.deposited - accountFlows.withdrawn
+    : null;
   const cdbContributed = holdingsApplied ?? accountContributed;
   const cdbNext = useNextContribution(cdbAccountId);
 

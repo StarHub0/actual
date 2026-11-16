@@ -55,31 +55,47 @@ export const cryptoAssets = {
   },
 } as const;
 
-async function fetchQuote(asset: CryptoAsset): Promise<CryptoQuote> {
+const emptyQuote = (price: number): CryptoQuote => ({
+  price,
+  change24h: null,
+  high24h: null,
+  low24h: null,
+  volume24h: null,
+});
+
+async function fetchQuotes(): Promise<Record<CryptoAsset, CryptoQuote>> {
+  const assets = Object.keys(cryptoAssets) as CryptoAsset[];
   try {
-    const response = await fetch(
-      `https://api.binance.com/api/v3/ticker/24hr?symbol=${cryptoAssets[asset].binancePair}`,
+    const symbols = JSON.stringify(
+      assets.map(asset => cryptoAssets[asset].binancePair),
     );
-    const body = await response.json();
-    return {
-      price: Number(body.lastPrice),
-      change24h: Number(body.priceChangePercent),
-      high24h: Number(body.highPrice),
-      low24h: Number(body.lowPrice),
-      volume24h: Number(body.quoteVolume),
-    };
+    const response = await fetch(
+      `https://api.binance.com/api/v3/ticker/24hr?symbols=${encodeURIComponent(symbols)}`,
+    );
+    const rows = (await response.json()) as Record<string, string>[];
+    const quotes = {} as Record<CryptoAsset, CryptoQuote>;
+    for (const asset of assets) {
+      const row = rows.find(r => r.symbol === cryptoAssets[asset].binancePair);
+      if (!row) throw new Error('missing symbol');
+      quotes[asset] = {
+        price: Number(row.lastPrice),
+        change24h: Number(row.priceChangePercent),
+        high24h: Number(row.highPrice),
+        low24h: Number(row.lowPrice),
+        volume24h: Number(row.quoteVolume),
+      };
+    }
+    return quotes;
   } catch {
-    const response = await fetch(
-      `https://api.coinbase.com/v2/prices/${cryptoAssets[asset].coinbasePair}/spot`,
-    );
-    const body = await response.json();
-    return {
-      price: Number(body.data.amount),
-      change24h: null,
-      high24h: null,
-      low24h: null,
-      volume24h: null,
-    };
+    const quotes = {} as Record<CryptoAsset, CryptoQuote>;
+    for (const asset of assets) {
+      const response = await fetch(
+        `https://api.coinbase.com/v2/prices/${cryptoAssets[asset].coinbasePair}/spot`,
+      );
+      const body = await response.json();
+      quotes[asset] = emptyQuote(Number(body.data.amount));
+    }
+    return quotes;
   }
 }
 
@@ -103,22 +119,34 @@ async function fetchCandles(
 
 export function useCryptoQuote(asset: CryptoAsset) {
   return useQuery({
-    queryKey: ['dashboard', 'quote', asset],
-    queryFn: () => fetchQuote(asset),
-    refetchInterval: 15_000,
-    staleTime: 10_000,
-    retry: 2,
+    queryKey: ['dashboard', 'quotes'],
+    queryFn: fetchQuotes,
+    select: quotes => quotes[asset],
+    refetchInterval: 60_000,
+    staleTime: 45_000,
+    refetchOnWindowFocus: false,
+    retry: 1,
   });
 }
+
+const candleRefreshMs: Record<HistoryRange['key'], number | false> = {
+  '1h': 60_000,
+  '24h': 120_000,
+  '7d': 10 * 60_000,
+  '30d': false,
+  '90d': false,
+  '1y': false,
+};
 
 export function useCryptoCandles(asset: CryptoAsset, range: HistoryRange) {
   return useQuery({
     queryKey: ['dashboard', 'candles', asset, range.key],
     queryFn: () => fetchCandles(asset, range),
-    staleTime: 15_000,
-    refetchInterval:
-      range.key === '1h' || range.key === '24h' ? 20_000 : 60_000,
-    retry: 2,
+    staleTime: 60_000,
+    gcTime: 30 * 60_000,
+    refetchInterval: candleRefreshMs[range.key],
+    refetchOnWindowFocus: false,
+    retry: 1,
   });
 }
 
@@ -153,7 +181,9 @@ export function useCdiRate() {
   return useQuery({
     queryKey: ['dashboard', 'cdi'],
     queryFn: fetchCdi,
-    staleTime: 60 * 60_000,
-    retry: 2,
+    staleTime: 6 * 60 * 60_000,
+    gcTime: 24 * 60 * 60_000,
+    refetchOnWindowFocus: false,
+    retry: 1,
   });
 }

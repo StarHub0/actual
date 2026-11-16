@@ -22,17 +22,20 @@ async function sumAmounts(accountId: string, side: '$gt' | '$lt') {
   return (data as number | null) ?? 0;
 }
 
-export function useNetContributed(accountId: string) {
+export type AccountFlows = { deposited: number; withdrawn: number };
+
+export function useAccountFlows(accountId: string) {
   const flows = useQuery({
-    queryKey: ['dashboard', 'contributed', accountId],
+    queryKey: ['dashboard', 'flows', accountId],
     enabled: accountId !== '',
-    refetchInterval: 15_000,
-    queryFn: async () => {
+    staleTime: 2 * 60_000,
+    refetchOnWindowFocus: false,
+    queryFn: async (): Promise<AccountFlows> => {
       const [deposited, withdrawn] = await Promise.all([
         sumAmounts(accountId, '$gt'),
         sumAmounts(accountId, '$lt'),
       ]);
-      return deposited + withdrawn;
+      return { deposited, withdrawn: Math.abs(withdrawn) };
     },
   });
   return accountId === '' ? null : (flows.data ?? null);

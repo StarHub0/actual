@@ -29,6 +29,148 @@ const compact = new Intl.NumberFormat('pt-BR', {
   maximumFractionDigits: 1,
 });
 
+function PositionPanel({
+  position,
+  symbol,
+}: {
+  position: CryptoPosition;
+  symbol: string;
+}) {
+  const { t } = useTranslation();
+  const format = useFormat();
+  const { cents, deposited, withdrawn, netInvested, profit, averagePrice } =
+    position;
+  const known = deposited != null && deposited > 0;
+  const base = Math.max(cents, netInvested ?? 0, 1);
+  const keptPart = Math.min(netInvested ?? 0, cents);
+  const gainPart = Math.max(cents - (netInvested ?? 0), 0);
+  const lossPart = Math.max((netInvested ?? 0) - cents, 0);
+  const up = (profit ?? 0) >= 0;
+
+  return (
+    <View
+      style={{
+        gap: 14,
+        padding: 14,
+        borderRadius: 8,
+        backgroundColor: theme.tableRowHeaderBackground,
+      }}
+    >
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'flex-end',
+          flexWrap: 'wrap',
+          gap: 8,
+        }}
+      >
+        <View style={{ gap: 2 }}>
+          <Text style={{ ...styles.smallText, color: theme.pageTextSubdued }}>
+            <Trans>Your position</Trans>
+          </Text>
+          <Text style={{ ...numeric, fontSize: 26, fontWeight: 500 }}>
+            {position.amount > 0 ? format(cents, 'financial') : '—'}
+          </Text>
+          <Text
+            style={{
+              ...numeric,
+              ...styles.smallText,
+              color: theme.pageTextSubdued,
+            }}
+          >
+            {position.amount > 0
+              ? `${position.amount.toLocaleString('pt-BR', { maximumFractionDigits: 8 })} ${symbol}`
+              : t('Set the amount in Edit')}
+          </Text>
+        </View>
+        <View style={{ alignItems: 'flex-end', gap: 2 }}>
+          <Text style={{ ...styles.smallText, color: theme.pageTextSubdued }}>
+            <Trans>Result</Trans>
+          </Text>
+          <Text
+            style={{
+              ...numeric,
+              fontSize: 18,
+              fontWeight: 500,
+              color:
+                profit == null
+                  ? theme.pageTextSubdued
+                  : up
+                    ? theme.reportsNumberPositive
+                    : theme.reportsNumberNegative,
+            }}
+          >
+            {profit == null
+              ? '—'
+              : `${up ? '+' : '-'}${format(Math.abs(profit), 'financial')}`}
+          </Text>
+          {position.profitPercent != null && (
+            <Chip value={position.profitPercent} />
+          )}
+        </View>
+      </View>
+
+      {known && position.amount > 0 && (
+        <View
+          style={{
+            flexDirection: 'row',
+            height: 8,
+            borderRadius: 4,
+            overflow: 'hidden',
+            gap: 2,
+            backgroundColor: theme.tableBorder,
+          }}
+        >
+          <View
+            style={{
+              width: `${(keptPart / base) * 100}%`,
+              backgroundColor: theme.pageTextSubdued,
+            }}
+          />
+          <View
+            style={{
+              width: `${(gainPart / base) * 100}%`,
+              backgroundColor: theme.reportsNumberPositive,
+            }}
+          />
+          <View
+            style={{
+              width: `${(lossPart / base) * 100}%`,
+              backgroundColor: theme.reportsNumberNegative,
+            }}
+          />
+        </View>
+      )}
+
+      <View
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
+          gap: 12,
+        }}
+      >
+        <Stat
+          label={t('Deposited')}
+          value={deposited == null ? '—' : format(deposited, 'financial')}
+        />
+        <Stat
+          label={t('Withdrawn')}
+          value={deposited == null ? '—' : format(withdrawn, 'financial')}
+        />
+        <Stat
+          label={t('Net invested')}
+          value={netInvested == null ? '—' : format(netInvested, 'financial')}
+        />
+        <Stat
+          label={t('Average price')}
+          value={averagePrice == null ? '—' : brl.format(averagePrice)}
+        />
+      </View>
+    </View>
+  );
+}
+
 export function CryptoCard({
   asset,
   position,
@@ -43,7 +185,6 @@ export function CryptoCard({
   isEditing?: boolean;
 }) {
   const { t } = useTranslation();
-  const format = useFormat();
   const config = cryptoAssets[asset];
   const [rangeKey, setRangeKey] = useState<HistoryRange['key']>('24h');
   const [mode, setMode] = useState<'line' | 'candles'>('candles');
@@ -59,7 +200,7 @@ export function CryptoCard({
     ? Math.max(...candles.map(c => c.high))
     : null;
   const rangeLow = candles.length ? Math.min(...candles.map(c => c.low)) : null;
-  const { profit, invested, quote } = position;
+  const { quote } = position;
 
   return (
     <WidgetCard
@@ -155,50 +296,7 @@ export function CryptoCard({
         />
       </View>
 
-      <View
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))',
-          gap: 12,
-          paddingTop: 12,
-          borderTop: `1px solid ${theme.tableBorder}`,
-        }}
-      >
-        <Stat
-          label={<Trans>Invested</Trans>}
-          value={invested == null ? '—' : format(invested, 'financial')}
-        />
-        <Stat
-          label={<Trans>Position</Trans>}
-          value={
-            position.amount > 0 ? format(position.cents, 'financial') : '—'
-          }
-        />
-        <Stat
-          label={<Trans>Profit</Trans>}
-          value={
-            profit == null
-              ? '—'
-              : `${profit >= 0 ? '+' : ''}${format(profit, 'financial')}`
-          }
-          tone={profit == null ? undefined : profit >= 0 ? 'good' : 'bad'}
-        />
-        <Stat
-          label="%"
-          value={
-            position.profitPercent == null
-              ? '—'
-              : `${position.profitPercent >= 0 ? '+' : ''}${position.profitPercent.toFixed(1)}%`
-          }
-          tone={
-            position.profitPercent == null
-              ? undefined
-              : position.profitPercent >= 0
-                ? 'good'
-                : 'bad'
-          }
-        />
-      </View>
+      <PositionPanel position={position} symbol={config.symbol} />
 
       <View
         style={{

@@ -5,7 +5,7 @@ import type { InvestmentWidget } from '@actual-app/core/types/models';
 import { CdbCard } from './investments/CdbCard';
 import { CryptoCard } from './investments/CryptoCard';
 import { InvestmentSummaryCard } from './investments/InvestmentSummaryCard';
-import { usePortfolio } from './investments/usePortfolio';
+import { useSharedPortfolio } from './investments/PortfolioProvider';
 
 export function InvestmentCard({
   widgetId,
@@ -16,7 +16,7 @@ export function InvestmentCard({
   isEditing?: boolean;
   meta: InvestmentWidget['meta'];
 }) {
-  const portfolio = usePortfolio();
+  const portfolio = useSharedPortfolio();
 
   switch (meta.asset) {
     case 'bitcoin':
