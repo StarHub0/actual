@@ -144,7 +144,9 @@ const isDev = process.env.NODE_ENV === 'development';
 const scriptSrc = isDev
   ? "'self' 'unsafe-inline' 'unsafe-eval' blob:"
   : "'self' 'unsafe-eval' blob:";
-const connectSrc = isDev ? "'self' ws: wss: http: https:" : 'http: https:';
+const connectSrc = isDev
+  ? "'self' ws: wss: http: https:"
+  : 'http: https: wss://stream.binance.com:9443';
 const csp = [
   "default-src 'self' blob:",
   "img-src 'self' blob: data:",

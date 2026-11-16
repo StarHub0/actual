@@ -14,29 +14,38 @@ import {
   useCryptoQuote,
 } from './cryptoMarket';
 import type { CryptoAsset } from './cryptoMarket';
-import { useAccountFlows, useNextContribution } from './useAccountInvestment';
+import { useLiveQuote } from './liveQuotes';
+import { useAssetFlows, useNextContribution } from './useAccountInvestment';
 import { useCdbHoldings } from './useCdbHoldings';
 
 function useCryptoPosition(
   asset: CryptoAsset,
   accounts: AccountEntity[],
   balances: Record<string, number | null>,
+  fallbackAccountId: string,
 ) {
   const config = cryptoAssets[asset];
   const [storedAccount] = useSyncedPref(config.accountPref);
   const [amountText] = useSyncedPref(config.amountPref);
   const [costText] = useSyncedPref(config.costPref);
-  const quote = useCryptoQuote(asset);
+  const restQuote = useCryptoQuote(asset);
+  const liveQuote = useLiveQuote(asset);
+  const quote = liveQuote ?? restQuote.data ?? null;
 
   const accountId =
     storedAccount ??
     accounts.find(account => config.accountPattern.test(account.name))?.id ??
-    '';
-  const flows = useAccountFlows(accountId);
+    fallbackAccountId;
+  const accountName = accounts.find(account => account.id === accountId)?.name;
+  const shared =
+    accountId !== '' && !config.accountPattern.test(accountName ?? '');
+  const flows = useAssetFlows(accountId, shared ? config.notesTerm : null);
   const next = useNextContribution(accountId);
 
-  const amount = parseDecimal(amountText ?? '') ?? 0;
-  const price = quote.data?.price ?? 0;
+  const manualAmount = parseDecimal(amountText ?? '') ?? 0;
+  const amountFromNotes = flows?.quantity != null;
+  const amount = flows?.quantity ?? manualAmount;
+  const price = quote?.price ?? 0;
   const cents = toCents(amount * price);
   const manualCost = parseDecimal(costText ?? '');
   const deposited =
@@ -53,7 +62,10 @@ function useCryptoPosition(
   return {
     asset,
     accountId,
-    bookBalance: balances[accountId] ?? 0,
+    sharedBook: shared ? (flows ? flows.deposited - flows.withdrawn : 0) : 0,
+    dedicatedBook: shared ? 0 : (balances[accountId] ?? 0),
+    fromNotes: shared,
+    amountFromNotes,
     amount,
     price,
     cents,
@@ -65,7 +77,7 @@ function useCryptoPosition(
     profitPercent:
       profit != null && deposited ? (profit / deposited) * 100 : null,
     next,
-    quote: quote.data ?? null,
+    quote,
   };
 }
 
@@ -80,14 +92,26 @@ export function usePortfolio() {
   const [cdiShareText] = useSyncedPref('dashboard-cdb-cdi');
   const cdi = useCdiRate();
 
-  const bitcoin = useCryptoPosition('bitcoin', accounts, balances);
-  const litecoin = useCryptoPosition('litecoin', accounts, balances);
-
   const cdbAccountId =
     storedCdbAccount ??
     accounts.find(account => /cdb|invest/i.test(account.name))?.id ??
     '';
+  const bitcoin = useCryptoPosition(
+    'bitcoin',
+    accounts,
+    balances,
+    cdbAccountId,
+  );
+  const litecoin = useCryptoPosition(
+    'litecoin',
+    accounts,
+    balances,
+    cdbAccountId,
+  );
   const cdbBookBalance = balances[cdbAccountId] ?? 0;
+  const sharedCryptoBook = [bitcoin, litecoin]
+    .filter(position => position.accountId === cdbAccountId)
+    .reduce((sum, position) => sum + position.sharedBook, 0);
   const holdingsQuery = useCdbHoldings();
   const holdings = holdingsQuery.data ?? null;
   const holdingsNet = holdings
@@ -96,10 +120,10 @@ export function usePortfolio() {
   const holdingsApplied = holdings
     ? Math.round(holdings.reduce((sum, item) => sum + item.applied, 0) * 100)
     : null;
-  const cdbBalance = holdingsNet ?? cdbBookBalance;
-  const accountFlows = useAccountFlows(cdbAccountId);
+  const cdbBalance = holdingsNet ?? cdbBookBalance - sharedCryptoBook;
+  const accountFlows = useAssetFlows(cdbAccountId, null);
   const accountContributed = accountFlows
-    ? accountFlows.deposited - accountFlows.withdrawn
+    ? accountFlows.deposited - accountFlows.withdrawn - sharedCryptoBook
     : null;
   const cdbContributed = holdingsApplied ?? accountContributed;
   const cdbNext = useNextContribution(cdbAccountId);
@@ -109,7 +133,7 @@ export function usePortfolio() {
     0,
   );
   const cryptoCents = bitcoin.cents + litecoin.cents;
-  const trackedBook = bitcoin.bookBalance + litecoin.bookBalance;
+  const trackedBook = bitcoin.dedicatedBook + litecoin.dedicatedBook;
   const cash = accountsTotal - cdbBookBalance - trackedBook;
 
   const cdiShare = parseDecimal(cdiShareText ?? '') ?? 100;

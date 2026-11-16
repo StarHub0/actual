@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 
 import { Button } from '@actual-app/components/button';
@@ -74,7 +74,7 @@ function PositionPanel({
             }}
           >
             {position.amount > 0
-              ? `${position.amount.toLocaleString('pt-BR', { maximumFractionDigits: 8 })} ${symbol}`
+              ? `${position.amount.toLocaleString('pt-BR', { maximumFractionDigits: 8 })} ${symbol}${position.amountFromNotes ? ` · ${t('from notes')}` : ''}`
               : t('Set the amount in Edit')}
           </Text>
         </View>
@@ -185,7 +185,20 @@ export function CryptoCard({
   const [editing, setEditing] = useState(false);
   const range = historyRanges.find(r => r.key === rangeKey) ?? historyRanges[1];
   const candlesQuery = useCryptoCandles(asset, range);
-  const candles = candlesQuery.data ?? [];
+  const loaded = candlesQuery.data;
+  const candles = useMemo(() => {
+    if (!loaded?.length || position.price <= 0) return loaded ?? [];
+    const lastCandle = loaded[loaded.length - 1];
+    return [
+      ...loaded.slice(0, -1),
+      {
+        ...lastCandle,
+        close: position.price,
+        high: Math.max(lastCandle.high, position.price),
+        low: Math.min(lastCandle.low, position.price),
+      },
+    ];
+  }, [loaded, position.price]);
 
   const first = candles[0]?.open ?? 0;
   const last = candles[candles.length - 1]?.close ?? 0;
