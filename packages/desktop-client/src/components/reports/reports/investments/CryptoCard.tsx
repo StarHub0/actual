@@ -211,6 +211,7 @@ export function CryptoCard({
 
   return (
     <WidgetCard
+      accent={config.color}
       widgetId={widgetId}
       isEditing={isEditing}
       title={config.name}
@@ -231,91 +232,112 @@ export function CryptoCard({
     >
       <View
         style={{
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          justifyContent: 'space-between',
-          gap: 8,
-        }}
-      >
-        <Segmented
-          value={rangeKey}
-          onChange={setRangeKey}
-          options={historyRanges.map(r => ({ value: r.key, label: r.label }))}
-        />
-        <Segmented
-          value={mode}
-          onChange={setMode}
-          options={[
-            { value: 'candles', label: t('Candles') },
-            { value: 'line', label: t('Line') },
-          ]}
-        />
-      </View>
-
-      <View style={{ height: 220 }}>
-        {candlesQuery.isError ? (
-          <Text style={{ color: theme.pageTextSubdued }}>
-            <Trans>Price history unavailable</Trans>
-          </Text>
-        ) : candles.length === 0 ? (
-          <Text style={{ color: theme.pageTextSubdued }}>...</Text>
-        ) : (
-          <CandleChart
-            candles={candles}
-            mode={mode}
-            range={range}
-            height={220}
-          />
-        )}
-      </View>
-
-      <View
-        style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))',
-          gap: 12,
-          paddingTop: 12,
-          borderTop: `1px solid ${theme.tableBorder}`,
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: 20,
+          alignItems: 'start',
         }}
       >
-        <Stat
-          label={range.label}
-          value={
-            rangeChange == null
-              ? '—'
-              : `${rangeChange >= 0 ? '+' : ''}${rangeChange.toFixed(2)}%`
-          }
-          tone={
-            rangeChange == null ? undefined : rangeChange >= 0 ? 'good' : 'bad'
-          }
-        />
-        <Stat
-          label={t('High')}
-          value={rangeHigh == null ? '—' : brlCompact.format(rangeHigh)}
-        />
-        <Stat
-          label={t('Low')}
-          value={rangeLow == null ? '—' : brlCompact.format(rangeLow)}
-        />
-        <Stat
-          label={t('Volume 24h')}
-          value={quote?.volume24h ? brlCompact.format(quote.volume24h) : '—'}
-        />
-      </View>
+        <View style={{ gap: 14, minWidth: 0 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              justifyContent: 'space-between',
+              gap: 8,
+            }}
+          >
+            <Segmented
+              value={rangeKey}
+              onChange={setRangeKey}
+              options={historyRanges.map(r => ({
+                value: r.key,
+                label: r.label,
+              }))}
+            />
+            <Segmented
+              value={mode}
+              onChange={setMode}
+              options={[
+                { value: 'candles', label: t('Candles') },
+                { value: 'line', label: t('Line') },
+              ]}
+            />
+          </View>
 
-      <PositionPanel position={position} symbol={config.symbol} />
+          <View style={{ height: 220 }}>
+            {candlesQuery.isError ? (
+              <Text style={{ color: theme.pageTextSubdued }}>
+                <Trans>Price history unavailable</Trans>
+              </Text>
+            ) : candles.length === 0 ? (
+              <Text style={{ color: theme.pageTextSubdued }}>...</Text>
+            ) : (
+              <CandleChart
+                candles={candles}
+                mode={mode}
+                range={range}
+                height={220}
+              />
+            )}
+          </View>
 
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <ScheduleLine next={position.next} />
-        <Button variant="bare" onPress={() => setEditing(!editing)}>
-          {editing ? t('Done') : t('Edit')}
-        </Button>
+          <View
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))',
+              gap: 12,
+              paddingTop: 12,
+              borderTop: `1px solid ${theme.tableBorder}`,
+            }}
+          >
+            <Stat
+              label={range.label}
+              value={
+                rangeChange == null
+                  ? '—'
+                  : `${rangeChange >= 0 ? '+' : ''}${rangeChange.toFixed(2)}%`
+              }
+              tone={
+                rangeChange == null
+                  ? undefined
+                  : rangeChange >= 0
+                    ? 'good'
+                    : 'bad'
+              }
+            />
+            <Stat
+              label={t('High')}
+              value={rangeHigh == null ? '—' : brlCompact.format(rangeHigh)}
+            />
+            <Stat
+              label={t('Low')}
+              value={rangeLow == null ? '—' : brlCompact.format(rangeLow)}
+            />
+            <Stat
+              label={t('Volume 24h')}
+              value={
+                quote?.volume24h ? brlCompact.format(quote.volume24h) : '—'
+              }
+            />
+          </View>
+        </View>
+        <View style={{ gap: 14, minWidth: 0 }}>
+          <PositionPanel position={position} symbol={config.symbol} />
+
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <ScheduleLine next={position.next} />
+            <Button variant="bare" onPress={() => setEditing(!editing)}>
+              {editing ? t('Done') : t('Edit')}
+            </Button>
+          </View>
+        </View>
       </View>
 
       {editing && (

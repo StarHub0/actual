@@ -161,7 +161,7 @@ export function CandleChart({
         axisLine={false}
         tickLine={false}
         minTickGap={56}
-        tick={{ fill: 'var(--color-pageTextSubdued)', fontSize: 11 }}
+        tick={{ fill: 'var(--color-pageTextLight)', fontSize: 12 }}
         tickFormatter={time => tickLabel(Number(time), range)}
       />
       <YAxis
@@ -171,7 +171,7 @@ export function CandleChart({
         tickLine={false}
         width={62}
         tickCount={5}
-        tick={{ fill: 'var(--color-pageTextSubdued)', fontSize: 11 }}
+        tick={{ fill: 'var(--color-pageTextLight)', fontSize: 12 }}
         tickFormatter={value =>
           Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 0 })
         }

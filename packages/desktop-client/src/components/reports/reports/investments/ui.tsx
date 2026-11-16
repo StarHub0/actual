@@ -1,7 +1,6 @@
 import React from 'react';
 import type { ReactNode } from 'react';
 
-import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
 import { View } from '@actual-app/components/view';
@@ -18,6 +17,7 @@ export const colors = {
 export const numeric = { fontVariantNumeric: 'tabular-nums' } as const;
 
 export function WidgetCard({
+  accent,
   widgetId,
   isEditing,
   title,
@@ -25,6 +25,7 @@ export function WidgetCard({
   right,
   children,
 }: {
+  accent?: string;
   widgetId: string;
   isEditing?: boolean;
   title: ReactNode;
@@ -34,9 +35,22 @@ export function WidgetCard({
 }) {
   return (
     <ReportCard widgetId={widgetId} isEditing={isEditing}>
+      {accent && (
+        <View
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 3,
+            backgroundColor: accent,
+            zIndex: 1,
+          }}
+        />
+      )}
       <View
         style={{
-          padding: 20,
+          padding: '22px 22px 20px',
           gap: 14,
           height: '100%',
           overflowY: 'auto',
@@ -53,13 +67,9 @@ export function WidgetCard({
           }}
         >
           <View style={{ minWidth: 0 }}>
-            <Text style={{ ...styles.mediumText, fontWeight: 500 }}>
-              {title}
-            </Text>
+            <Text style={{ fontSize: 17, fontWeight: 600 }}>{title}</Text>
             {subtitle && (
-              <Text
-                style={{ ...styles.smallText, color: theme.pageTextSubdued }}
-              >
+              <Text style={{ fontSize: 12.5, color: theme.pageTextSubdued }}>
                 {subtitle}
               </Text>
             )}
@@ -102,14 +112,14 @@ export function Stat({
 }) {
   return (
     <View style={{ gap: 2, minWidth: 0 }}>
-      <Text style={{ ...styles.smallText, color: theme.pageTextSubdued }}>
+      <Text style={{ fontSize: 12, color: theme.pageTextSubdued }}>
         {label}
       </Text>
       <Text
         style={{
           ...numeric,
-          fontSize: 15,
-          fontWeight: 500,
+          fontSize: 16,
+          fontWeight: 600,
           color:
             tone === 'good'
               ? theme.reportsNumberPositive
@@ -156,7 +166,7 @@ export function Segmented<T extends string>({
             cursor: 'pointer',
             padding: '3px 9px',
             borderRadius: 4,
-            fontSize: 12,
+            fontSize: 13,
             fontWeight: value === option.value ? 600 : 400,
             color:
               value === option.value ? theme.pageText : theme.pageTextSubdued,

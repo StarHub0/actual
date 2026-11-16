@@ -73,6 +73,11 @@ import { SankeyCard } from './reports/SankeyCard';
 import { SpendingCard } from './reports/SpendingCard';
 import { SummaryCard } from './reports/SummaryCard';
 
+function getInvestmentHeight(asset: InvestmentWidget['meta']['asset']) {
+  if (asset === 'summary') return 2;
+  return asset === 'cdb' ? 5 : 7;
+}
+
 function getWidgetMinHeight(widget: DashboardWidgetEntity) {
   switch (widget.type) {
     case 'custom-report':
@@ -82,7 +87,7 @@ function getWidgetMinHeight(widget: DashboardWidgetEntity) {
     case 'sankey-card':
       return 3;
     case 'investment-card':
-      return widget.meta.asset === 'summary' ? 2 : 3;
+      return getInvestmentHeight(widget.meta.asset);
     default:
       return 2;
   }
@@ -109,8 +114,7 @@ function getNewWidgetHeight(
 ) {
   if (type === 'sankey-card') return 3;
   if (type === 'investment-card') {
-    const asset = (meta as InvestmentWidget['meta']).asset;
-    return asset === 'summary' ? 2 : asset === 'cdb' ? 5 : 8;
+    return getInvestmentHeight((meta as InvestmentWidget['meta']).asset);
   }
   return 2;
 }
@@ -219,7 +223,10 @@ export function Overview({ dashboard }: OverviewProps) {
       x: widget.x,
       y: widget.y,
       w: widget.width,
-      h: widget.height,
+      h:
+        widget.type === 'investment-card'
+          ? Math.max(widget.height, getWidgetMinHeight(widget))
+          : widget.height,
       minW: getWidgetMinWidth(widget),
       minH: getWidgetMinHeight(widget),
     }));

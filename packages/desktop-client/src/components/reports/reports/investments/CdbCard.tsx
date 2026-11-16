@@ -37,6 +37,7 @@ export function CdbCard({
 
   return (
     <WidgetCard
+      accent="#ec7000"
       widgetId={widgetId}
       isEditing={isEditing}
       title="CDB Itaú"
@@ -97,7 +98,7 @@ export function CdbCard({
                 }}
               >
                 <View style={{ minWidth: 0 }}>
-                  <Text style={{ ...numeric, fontSize: 13, fontWeight: 500 }}>
+                  <Text style={{ ...numeric, fontSize: 15, fontWeight: 600 }}>
                     {format(Math.round(item.net * 100), 'financial')}
                   </Text>
                   <Text
