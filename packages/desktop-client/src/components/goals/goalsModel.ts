@@ -1,11 +1,16 @@
 import * as monthUtils from '@actual-app/core/shared/months';
 
+export type GoalPriority = 'high' | 'medium' | 'low';
+
 export type SavingsGoal = {
   id: string;
   categoryId: string;
   name: string;
   target: number;
   deadline: string | null;
+  priority?: GoalPriority;
+  link?: string;
+  notes?: string;
 };
 
 export function parseGoals(raw: string | undefined): SavingsGoal[] {
@@ -73,7 +78,9 @@ export function readImageAsThumbnail(file: File, maxWidth = 640) {
       const canvas = document.createElement('canvas');
       canvas.width = Math.round(img.width * scale);
       canvas.height = Math.round(img.height * scale);
-      canvas.getContext('2d')?.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas
+        .getContext('2d')
+        ?.drawImage(img, 0, 0, canvas.width, canvas.height);
       URL.revokeObjectURL(url);
       resolve(canvas.toDataURL('image/jpeg', 0.8));
     };
@@ -84,3 +91,26 @@ export function readImageAsThumbnail(file: File, maxWidth = 640) {
     img.src = url;
   });
 }
+
+export function parseChecklist(notes: string | undefined) {
+  const matches = [...(notes ?? '').matchAll(/^\s*[-*+]\s+\[( |x|X)\]/gm)];
+  return {
+    total: matches.length,
+    done: matches.filter(match => match[1] !== ' ').length,
+  };
+}
+
+export function toggleChecklistItem(notes: string, index: number) {
+  let seen = -1;
+  return notes.replace(/^(\s*[-*+]\s+)\[( |x|X)\]/gm, (whole, lead, mark) => {
+    seen += 1;
+    if (seen !== index) return whole;
+    return `${lead}[${mark === ' ' ? 'x' : ' '}]`;
+  });
+}
+
+export const priorityOrder: Record<GoalPriority, number> = {
+  high: 0,
+  medium: 1,
+  low: 2,
+};
