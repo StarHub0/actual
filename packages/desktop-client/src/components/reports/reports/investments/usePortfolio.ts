@@ -39,12 +39,16 @@ function useCryptoPosition(
   const accountName = accounts.find(account => account.id === accountId)?.name;
   const shared =
     accountId !== '' && !config.accountPattern.test(accountName ?? '');
-  const flows = useAssetFlows(accountId, shared ? config.notesTerm : null);
+  const flows = useAssetFlows(
+    accountId,
+    shared ? config.notesTerm : null,
+    config.binancePair,
+  );
   const next = useNextContribution(accountId);
 
   const manualAmount = parseDecimal(amountText ?? '') ?? 0;
-  const amountFromNotes = flows?.quantity != null;
-  const amount = flows?.quantity ?? manualAmount;
+  const amountFromNotes = manualAmount <= 0 && flows?.quantity != null;
+  const amount = manualAmount > 0 ? manualAmount : (flows?.quantity ?? 0);
   const price = quote?.price ?? 0;
   const cents = toCents(amount * price);
   const manualCost = parseDecimal(costText ?? '');
@@ -66,6 +70,7 @@ function useCryptoPosition(
     dedicatedBook: shared ? 0 : (balances[accountId] ?? 0),
     fromNotes: shared,
     amountFromNotes,
+    amountEstimated: amountFromNotes && flows?.estimated === true,
     amount,
     price,
     cents,

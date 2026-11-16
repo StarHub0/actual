@@ -74,7 +74,7 @@ function PositionPanel({
             }}
           >
             {position.amount > 0
-              ? `${position.amount.toLocaleString('pt-BR', { maximumFractionDigits: 8 })} ${symbol}${position.amountFromNotes ? ` · ${t('from notes')}` : ''}`
+              ? `${position.amount.toLocaleString('pt-BR', { maximumFractionDigits: 8 })} ${symbol}${position.amountEstimated ? ` · ${t('estimated from your deposits')}` : position.amountFromNotes ? ` · ${t('from notes')}` : ''}`
               : t('Set the amount in Edit')}
           </Text>
         </View>
@@ -322,7 +322,7 @@ export function CryptoCard({
         <SettingsRow>
           <PrefInput
             prefKey={config.amountPref}
-            label={t('{{symbol}} held', { symbol: config.symbol })}
+            label={t('{{symbol}} held (optional)', { symbol: config.symbol })}
             placeholder="0,00000000"
           />
           <AccountSelect
