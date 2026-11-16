@@ -2,24 +2,32 @@ import React, { useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 
 import { Button } from '@actual-app/components/button';
+import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
 import { View } from '@actual-app/components/view';
-import { Area, AreaChart, Tooltip as ChartTooltip, YAxis } from 'recharts';
 
 import { useFormat } from '#hooks/useFormat';
 
+import { CandleChart } from './CandleChart';
 import {
   brl,
   cryptoAssets,
   historyRanges,
-  useCryptoHistory,
+  useCryptoCandles,
 } from './cryptoMarket';
-import type { CryptoAsset } from './cryptoMarket';
+import type { CryptoAsset, HistoryRange } from './cryptoMarket';
 import { AccountSelect, PrefInput, SettingsRow } from './PrefInput';
 import { ScheduleLine } from './ScheduleLine';
-import { Chip, numeric, Stat, WidgetCard } from './ui';
+import { Chip, numeric, Segmented, Stat, WidgetCard } from './ui';
 import type { CryptoPosition } from './usePortfolio';
+
+const compact = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+  notation: 'compact',
+  maximumFractionDigits: 1,
+});
 
 export function CryptoCard({
   asset,
@@ -37,16 +45,21 @@ export function CryptoCard({
   const { t } = useTranslation();
   const format = useFormat();
   const config = cryptoAssets[asset];
-  const [days, setDays] = useState(30);
+  const [rangeKey, setRangeKey] = useState<HistoryRange['key']>('24h');
+  const [mode, setMode] = useState<'line' | 'candles'>('candles');
   const [editing, setEditing] = useState(false);
-  const history = useCryptoHistory(asset, days);
-  const points = history.data ?? [];
-  const rising =
-    (points[points.length - 1]?.price ?? 0) >= (points[0]?.price ?? 0);
-  const lineColor = rising
-    ? theme.reportsNumberPositive
-    : theme.reportsNumberNegative;
-  const { profit, invested } = position;
+  const range = historyRanges.find(r => r.key === rangeKey) ?? historyRanges[1];
+  const candlesQuery = useCryptoCandles(asset, range);
+  const candles = candlesQuery.data ?? [];
+
+  const first = candles[0]?.open ?? 0;
+  const last = candles[candles.length - 1]?.close ?? 0;
+  const rangeChange = first > 0 ? ((last - first) / first) * 100 : null;
+  const rangeHigh = candles.length
+    ? Math.max(...candles.map(c => c.high))
+    : null;
+  const rangeLow = candles.length ? Math.min(...candles.map(c => c.low)) : null;
+  const { profit, invested, quote } = position;
 
   return (
     <WidgetCard
@@ -56,89 +69,101 @@ export function CryptoCard({
       subtitle={`${config.symbol} / BRL`}
       right={
         <View style={{ alignItems: 'flex-end' }}>
-          <Text style={{ ...numeric, fontSize: 20, fontWeight: 500 }}>
+          <Text style={{ ...numeric, fontSize: 22, fontWeight: 500 }}>
             {position.price > 0 ? brl.format(position.price) : '—'}
           </Text>
-          <Chip value={position.quote?.change24h ?? null} />
+          <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+            <Chip value={quote?.change24h ?? null} />
+            <Text style={{ ...styles.smallText, color: theme.pageTextSubdued }}>
+              24h
+            </Text>
+          </View>
         </View>
       }
     >
-      <View style={{ height: 110, flexShrink: 0 }}>
-        {history.isError ? (
+      <View
+        style={{
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          justifyContent: 'space-between',
+          gap: 8,
+        }}
+      >
+        <Segmented
+          value={rangeKey}
+          onChange={setRangeKey}
+          options={historyRanges.map(r => ({ value: r.key, label: r.label }))}
+        />
+        <Segmented
+          value={mode}
+          onChange={setMode}
+          options={[
+            { value: 'candles', label: t('Candles') },
+            { value: 'line', label: t('Line') },
+          ]}
+        />
+      </View>
+
+      <View style={{ height: 210, flexShrink: 0 }}>
+        {candlesQuery.isError ? (
           <Text style={{ color: theme.pageTextSubdued }}>
             <Trans>Price history unavailable</Trans>
           </Text>
+        ) : candles.length === 0 ? (
+          <Text style={{ color: theme.pageTextSubdued }}>...</Text>
         ) : (
-          <AreaChart
-            data={points}
-            responsive
-            style={{ width: '100%', height: '100%' }}
-            margin={{ top: 4, right: 0, bottom: 0, left: 0 }}
-          >
-            <defs>
-              <linearGradient id={`${asset}Fill`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={lineColor} stopOpacity={0.25} />
-                <stop offset="100%" stopColor={lineColor} stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <YAxis domain={['dataMin', 'dataMax']} hide />
-            <ChartTooltip
-              contentStyle={{
-                backgroundColor: theme.menuBackground,
-                border: `1px solid ${theme.tableBorder}`,
-                borderRadius: 4,
-                color: theme.menuItemText,
-              }}
-              formatter={value => [brl.format(Number(value)), config.symbol]}
-              labelFormatter={time =>
-                new Date(Number(time)).toLocaleDateString('pt-BR', {
-                  day: '2-digit',
-                  month: 'short',
-                })
-              }
-            />
-            <Area
-              type="monotone"
-              dataKey="price"
-              stroke={lineColor}
-              strokeWidth={2}
-              fill={`url(#${asset}Fill)`}
-              isAnimationActive={false}
-              dot={false}
-            />
-          </AreaChart>
+          <CandleChart
+            candles={candles}
+            mode={mode}
+            range={range}
+            height={210}
+          />
         )}
       </View>
 
       <View
         style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))',
+          gap: 12,
+          paddingTop: 12,
+          borderTop: `1px solid ${theme.tableBorder}`,
         }}
       >
-        <View style={{ flexDirection: 'row', gap: 2 }}>
-          {historyRanges.map(range => (
-            <Button
-              key={range.days}
-              variant="bare"
-              onPress={() => setDays(range.days)}
-              style={{
-                color:
-                  days === range.days ? config.color : theme.pageTextSubdued,
-                fontWeight: days === range.days ? 600 : 400,
-              }}
-            >
-              {range.label}
-            </Button>
-          ))}
-        </View>
-        <Button variant="bare" onPress={() => setEditing(!editing)}>
-          {editing ? t('Done') : t('Edit')}
-        </Button>
+        <Stat
+          label={range.label}
+          value={
+            rangeChange == null
+              ? '—'
+              : `${rangeChange >= 0 ? '+' : ''}${rangeChange.toFixed(2)}%`
+          }
+          tone={
+            rangeChange == null ? undefined : rangeChange >= 0 ? 'good' : 'bad'
+          }
+        />
+        <Stat
+          label={t('High')}
+          value={rangeHigh == null ? '—' : brl.format(rangeHigh)}
+        />
+        <Stat
+          label={t('Low')}
+          value={rangeLow == null ? '—' : brl.format(rangeLow)}
+        />
+        <Stat
+          label={t('Volume 24h')}
+          value={quote?.volume24h ? compact.format(quote.volume24h) : '—'}
+        />
       </View>
 
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 24 }}>
+      <View
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))',
+          gap: 12,
+          paddingTop: 12,
+          borderTop: `1px solid ${theme.tableBorder}`,
+        }}
+      >
         <Stat
           label={<Trans>Invested</Trans>}
           value={invested == null ? '—' : format(invested, 'financial')}
@@ -158,9 +183,35 @@ export function CryptoCard({
           }
           tone={profit == null ? undefined : profit >= 0 ? 'good' : 'bad'}
         />
+        <Stat
+          label="%"
+          value={
+            position.profitPercent == null
+              ? '—'
+              : `${position.profitPercent >= 0 ? '+' : ''}${position.profitPercent.toFixed(1)}%`
+          }
+          tone={
+            position.profitPercent == null
+              ? undefined
+              : position.profitPercent >= 0
+                ? 'good'
+                : 'bad'
+          }
+        />
       </View>
 
-      <ScheduleLine next={position.next} />
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <ScheduleLine next={position.next} />
+        <Button variant="bare" onPress={() => setEditing(!editing)}>
+          {editing ? t('Done') : t('Edit')}
+        </Button>
+      </View>
 
       {editing && (
         <SettingsRow>

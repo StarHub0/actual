@@ -1,15 +1,32 @@
 import { useQuery } from '@tanstack/react-query';
 
-export type PricePoint = { time: number; price: number };
+export type Candle = {
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+};
 
-export type CryptoQuote = { price: number; change24h: number | null };
+export type CryptoQuote = {
+  price: number;
+  change24h: number | null;
+  high24h: number | null;
+  low24h: number | null;
+  volume24h: number | null;
+};
 
 export const historyRanges = [
-  { days: 7, label: '7D' },
-  { days: 30, label: '30D' },
-  { days: 90, label: '90D' },
-  { days: 365, label: '1Y' },
+  { key: '1h', label: '1H', interval: '1m', limit: 60 },
+  { key: '24h', label: '24H', interval: '15m', limit: 96 },
+  { key: '7d', label: '7D', interval: '1h', limit: 168 },
+  { key: '30d', label: '30D', interval: '4h', limit: 180 },
+  { key: '90d', label: '90D', interval: '1d', limit: 90 },
+  { key: '1y', label: '1Y', interval: '1d', limit: 365 },
 ] as const;
+
+export type HistoryRange = (typeof historyRanges)[number];
 
 export type CryptoAsset = 'bitcoin' | 'litecoin';
 
@@ -19,6 +36,7 @@ export const cryptoAssets = {
     name: 'Bitcoin',
     color: '#f7931a',
     coinbasePair: 'BTC-BRL',
+    binancePair: 'BTCBRL',
     accountPattern: /bitcoin|btc/i,
     amountPref: 'dashboard-btc-amount',
     costPref: 'dashboard-btc-cost',
@@ -29,6 +47,7 @@ export const cryptoAssets = {
     name: 'Litecoin',
     color: '#6f8fd8',
     coinbasePair: 'LTC-BRL',
+    binancePair: 'LTCBRL',
     accountPattern: /litecoin|ltc/i,
     amountPref: 'dashboard-ltc-amount',
     costPref: 'dashboard-ltc-cost',
@@ -39,33 +58,46 @@ export const cryptoAssets = {
 async function fetchQuote(asset: CryptoAsset): Promise<CryptoQuote> {
   try {
     const response = await fetch(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${asset}&vs_currencies=brl&include_24hr_change=true`,
+      `https://api.binance.com/api/v3/ticker/24hr?symbol=${cryptoAssets[asset].binancePair}`,
     );
     const body = await response.json();
     return {
-      price: body[asset].brl,
-      change24h: body[asset].brl_24h_change ?? null,
+      price: Number(body.lastPrice),
+      change24h: Number(body.priceChangePercent),
+      high24h: Number(body.highPrice),
+      low24h: Number(body.lowPrice),
+      volume24h: Number(body.quoteVolume),
     };
   } catch {
     const response = await fetch(
       `https://api.coinbase.com/v2/prices/${cryptoAssets[asset].coinbasePair}/spot`,
     );
     const body = await response.json();
-    return { price: Number(body.data.amount), change24h: null };
+    return {
+      price: Number(body.data.amount),
+      change24h: null,
+      high24h: null,
+      low24h: null,
+      volume24h: null,
+    };
   }
 }
 
-async function fetchHistory(
+async function fetchCandles(
   asset: CryptoAsset,
-  days: number,
-): Promise<PricePoint[]> {
+  range: HistoryRange,
+): Promise<Candle[]> {
   const response = await fetch(
-    `https://api.coingecko.com/api/v3/coins/${asset}/market_chart?vs_currency=brl&days=${days}`,
+    `https://api.binance.com/api/v3/klines?symbol=${cryptoAssets[asset].binancePair}&interval=${range.interval}&limit=${range.limit}`,
   );
-  const body = await response.json();
-  return (body.prices as [number, number][]).map(([time, price]) => ({
-    time,
-    price,
+  const rows = (await response.json()) as string[][];
+  return rows.map(row => ({
+    time: Number(row[0]),
+    open: Number(row[1]),
+    high: Number(row[2]),
+    low: Number(row[3]),
+    close: Number(row[4]),
+    volume: Number(row[5]),
   }));
 }
 
@@ -73,18 +105,19 @@ export function useCryptoQuote(asset: CryptoAsset) {
   return useQuery({
     queryKey: ['dashboard', 'quote', asset],
     queryFn: () => fetchQuote(asset),
-    refetchInterval: 60_000,
-    staleTime: 30_000,
+    refetchInterval: 15_000,
+    staleTime: 10_000,
     retry: 2,
   });
 }
 
-export function useCryptoHistory(asset: CryptoAsset, days: number) {
+export function useCryptoCandles(asset: CryptoAsset, range: HistoryRange) {
   return useQuery({
-    queryKey: ['dashboard', 'history', asset, days],
-    queryFn: () => fetchHistory(asset, days),
-    staleTime: 5 * 60_000,
-    refetchInterval: 5 * 60_000,
+    queryKey: ['dashboard', 'candles', asset, range.key],
+    queryFn: () => fetchCandles(asset, range),
+    staleTime: 15_000,
+    refetchInterval:
+      range.key === '1h' || range.key === '24h' ? 20_000 : 60_000,
     retry: 2,
   });
 }

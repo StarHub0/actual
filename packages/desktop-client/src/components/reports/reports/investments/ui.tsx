@@ -126,3 +126,48 @@ export function Stat({
 export function Divider() {
   return <View style={{ height: 1, backgroundColor: theme.tableBorder }} />;
 }
+
+export function Segmented<T extends string>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T;
+  options: { value: T; label: ReactNode }[];
+  onChange: (value: T) => void;
+}) {
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        padding: 2,
+        gap: 2,
+        borderRadius: 6,
+        backgroundColor: theme.tableRowHeaderBackground,
+      }}
+    >
+      {options.map(option => (
+        <button
+          key={option.value}
+          onClick={() => onChange(option.value)}
+          style={{
+            border: 'none',
+            cursor: 'pointer',
+            padding: '3px 9px',
+            borderRadius: 4,
+            fontSize: 12,
+            fontWeight: value === option.value ? 600 : 400,
+            color:
+              value === option.value ? theme.pageText : theme.pageTextSubdued,
+            backgroundColor:
+              value === option.value ? theme.tableBackground : 'transparent',
+            boxShadow:
+              value === option.value ? '0 1px 2px rgba(0,0,0,.25)' : 'none',
+          }}
+        >
+          {option.label}
+        </button>
+      ))}
+    </View>
+  );
+}

@@ -108,7 +108,8 @@ function getNewWidgetHeight(
 ) {
   if (type === 'sankey-card') return 3;
   if (type === 'investment-card') {
-    return (meta as InvestmentWidget['meta']).asset === 'summary' ? 2 : 4;
+    const asset = (meta as InvestmentWidget['meta']).asset;
+    return asset === 'summary' ? 2 : asset === 'cdb' ? 4 : 6;
   }
   return 2;
 }
