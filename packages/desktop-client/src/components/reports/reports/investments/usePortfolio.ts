@@ -15,6 +15,7 @@ import {
 } from './cryptoMarket';
 import type { CryptoAsset } from './cryptoMarket';
 import { useNetContributed, useNextContribution } from './useAccountInvestment';
+import { useCdbHoldings } from './useCdbHoldings';
 
 function useCryptoPosition(
   asset: CryptoAsset,
@@ -77,8 +78,18 @@ export function usePortfolio() {
     storedCdbAccount ??
     accounts.find(account => /cdb|invest/i.test(account.name))?.id ??
     '';
-  const cdbBalance = balances[cdbAccountId] ?? 0;
-  const cdbContributed = useNetContributed(cdbAccountId);
+  const cdbBookBalance = balances[cdbAccountId] ?? 0;
+  const holdingsQuery = useCdbHoldings();
+  const holdings = holdingsQuery.data ?? null;
+  const holdingsNet = holdings
+    ? Math.round(holdings.reduce((sum, item) => sum + item.net, 0) * 100)
+    : null;
+  const holdingsApplied = holdings
+    ? Math.round(holdings.reduce((sum, item) => sum + item.applied, 0) * 100)
+    : null;
+  const cdbBalance = holdingsNet ?? cdbBookBalance;
+  const accountContributed = useNetContributed(cdbAccountId);
+  const cdbContributed = holdingsApplied ?? accountContributed;
   const cdbNext = useNextContribution(cdbAccountId);
 
   const accountsTotal = accounts.reduce(
@@ -87,7 +98,7 @@ export function usePortfolio() {
   );
   const cryptoCents = bitcoin.cents + litecoin.cents;
   const trackedBook = bitcoin.bookBalance + litecoin.bookBalance;
-  const cash = accountsTotal - cdbBalance - trackedBook;
+  const cash = accountsTotal - cdbBookBalance - trackedBook;
 
   const cdiShare = parseDecimal(cdiShareText ?? '') ?? 100;
   const cdiRate = cdi.data ?? null;
@@ -98,12 +109,15 @@ export function usePortfolio() {
   return {
     accounts,
     cash,
-    netWorth: accountsTotal - trackedBook + cryptoCents,
+    netWorth:
+      accountsTotal - cdbBookBalance - trackedBook + cdbBalance + cryptoCents,
     invested: Math.max(cdbBalance, 0) + cryptoCents,
     bitcoin,
     litecoin,
     cdbAccountId,
     cdbBalance,
+    holdings,
+    holdingsError: holdingsQuery.isError,
     cdbContributed,
     cdbNext,
     cdbYield:

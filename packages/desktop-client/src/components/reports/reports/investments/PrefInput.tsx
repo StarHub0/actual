@@ -16,7 +16,9 @@ type DecimalPref =
   | 'dashboard-btc-cost'
   | 'dashboard-ltc-amount'
   | 'dashboard-ltc-cost'
-  | 'dashboard-cdb-cdi';
+  | 'dashboard-cdb-cdi'
+  | 'dashboard-opr-url'
+  | 'dashboard-opr-token';
 
 type AccountPref =
   | 'dashboard-btc-account'

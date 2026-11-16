@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 
 import { Button } from '@actual-app/components/button';
+import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
+import { theme } from '@actual-app/components/theme';
 import { View } from '@actual-app/components/view';
 
 import { useFormat } from '#hooks/useFormat';
@@ -11,6 +13,12 @@ import { AccountSelect, PrefInput, SettingsRow } from './PrefInput';
 import { ScheduleLine } from './ScheduleLine';
 import { numeric, Stat, WidgetCard } from './ui';
 import type { Portfolio } from './usePortfolio';
+
+const dateFormat = new Intl.DateTimeFormat('pt-BR', {
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+});
 
 export function CdbCard({
   portfolio,
@@ -24,7 +32,8 @@ export function CdbCard({
   const { t } = useTranslation();
   const format = useFormat();
   const [editing, setEditing] = useState(false);
-  const { cdbMonthly, cdbYield, cdbContributed } = portfolio;
+  const { cdbMonthly, cdbYield, cdbContributed, holdings } = portfolio;
+  const live = holdings != null;
 
   return (
     <WidgetCard
@@ -32,12 +41,9 @@ export function CdbCard({
       isEditing={isEditing}
       title="CDB Itaú"
       subtitle={
-        portfolio.cdbRate == null
-          ? t('CDI unavailable')
-          : t('{{share}}% of CDI · {{rate}}% a.a.', {
-              share: portfolio.cdiShare,
-              rate: portfolio.cdbRate.toFixed(2),
-            })
+        live
+          ? t('{{count}} active · synced from Itaú', { count: holdings.length })
+          : t('Estimate from the Actual account')
       }
       right={
         <Button variant="bare" onPress={() => setEditing(!editing)}>
@@ -66,7 +72,7 @@ export function CdbCard({
           tone={cdbYield == null ? undefined : cdbYield >= 0 ? 'good' : 'bad'}
         />
         <Stat
-          label={<Trans>Per month</Trans>}
+          label={t('Per month (est.)')}
           value={
             cdbMonthly == null ? '—' : `+${format(cdbMonthly, 'financial')}`
           }
@@ -74,21 +80,94 @@ export function CdbCard({
         />
       </View>
 
+      {live && (
+        <View style={{ gap: 0 }}>
+          {holdings.map(item => {
+            const gain = Math.round((item.net - item.applied) * 100);
+            return (
+              <View
+                key={item.id}
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: '8px 0',
+                  borderTop: `1px solid ${theme.tableBorder}`,
+                }}
+              >
+                <View style={{ minWidth: 0 }}>
+                  <Text style={{ ...numeric, fontSize: 13, fontWeight: 500 }}>
+                    {format(Math.round(item.net * 100), 'financial')}
+                  </Text>
+                  <Text
+                    style={{
+                      ...styles.smallText,
+                      color: theme.pageTextSubdued,
+                    }}
+                  >
+                    {item.rate}% {item.rateType} ·{' '}
+                    {t('due {{date}}', {
+                      date: dateFormat.format(new Date(item.dueDate)),
+                    })}
+                  </Text>
+                </View>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text
+                    style={{
+                      ...numeric,
+                      fontSize: 13,
+                      color: theme.reportsNumberPositive,
+                    }}
+                  >
+                    +{format(gain, 'financial')}
+                  </Text>
+                  <Text
+                    style={{
+                      ...styles.smallText,
+                      color: theme.pageTextSubdued,
+                    }}
+                  >
+                    {t('from {{amount}}', {
+                      amount: format(
+                        Math.round(item.applied * 100),
+                        'financial',
+                      ),
+                    })}
+                  </Text>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      )}
+
+      {portfolio.holdingsError && (
+        <Text style={{ ...styles.smallText, color: theme.errorText }}>
+          <Trans>Could not read the Itaú CDBs. Check the token in Edit.</Trans>
+        </Text>
+      )}
+
       <ScheduleLine next={portfolio.cdbNext} />
 
       {editing && (
         <SettingsRow>
+          <PrefInput
+            prefKey="dashboard-opr-token"
+            label={t('Itaú read token')}
+            placeholder="..."
+          />
+          <PrefInput
+            prefKey="dashboard-opr-url"
+            label={t('Server URL')}
+            placeholder="https://opr-production.up.railway.app"
+          />
           <AccountSelect
             prefKey="dashboard-cdb-account"
-            label={t('CDB account')}
+            label={t('CDB account (fallback)')}
             accounts={portfolio.accounts}
             value={portfolio.cdbAccountId}
             emptyLabel={t('None')}
-          />
-          <PrefInput
-            prefKey="dashboard-cdb-cdi"
-            label={t('% of CDI')}
-            placeholder="100"
           />
         </SettingsRow>
       )}

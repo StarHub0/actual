@@ -75,6 +75,8 @@ export type SyncedPrefs = Partial<
     | 'dashboard-btc-cost'
     | 'dashboard-cdb-account'
     | 'dashboard-cdb-cdi'
+    | 'dashboard-opr-url'
+    | 'dashboard-opr-token'
     | 'dashboard-btc-account'
     | 'dashboard-ltc-amount'
     | 'dashboard-ltc-cost'
